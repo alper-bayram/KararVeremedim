@@ -483,12 +483,13 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - [ ] Sayfa başlıkları ve temel meta etiketleri (anket sorusu `<title>`'da)
 
 ### Faz 5 — Yayın (Vercel)
-- [ ] Üretim ayarları (`DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, güvenli çerezler)
-- [ ] Statik dosyaların Vercel'de sunulması (güncel Vercel Django dokümanına göre)
-- [ ] Supabase pooler bağlantısı (bölüm 2.1)
-- [ ] Vercel ortam değişkenleri
-- [ ] Migration'ların üretim veritabanına uygulanması, süper kullanıcı oluşturulması
-- [ ] Canlı ortamda uçtan uca elle test: kayıt → anket oluştur → başka tarayıcıdan misafir olarak oy ver
+- [x] Üretim ayarları (`DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, güvenli çerezler)
+- [x] Statik dosyaların Vercel'de sunulması (güncel Vercel Django dokümanına göre)
+- [x] Supabase pooler bağlantısı (bölüm 2.1)
+- [x] Vercel ortam değişkenleri
+- [x] Migration'ların üretim veritabanına uygulanması
+- [ ] Süper kullanıcı oluşturulması (`createsuperuser`, yerelden Supabase'e bağlıyken)
+- [ ] Canlı ortamda uçtan uca elle test: kayıt → anket oluştur → başka tarayıcıdan misafir olarak oy ver (anket ve oylama Faz 2-3'te gelecek; kayıt/giriş şimdi denenebilir)
 
 > Not: İstenirse Faz 5, Faz 1'den hemen sonra da yapılabilir. Erken deploy, Vercel'e özgü sorunları erkenden yakalar.
 
@@ -541,3 +542,6 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - "Popüler" sıralaması: son 24 saatte verilen oy sayısına göre; eşitlikte yeni olan öne çıkar.
 - Misafir sonradan üye olursa `voter_key` değiştiği için eski misafir oyları taşınmaz ve yeniden oy verebilir (prototip için kabul edildi).
 - Deploy sırası: Faz 5 (Vercel yayını), Faz 1 bittikten hemen sonra yapılacak; Vercel'e özgü sorunlar erken yakalansın diye.
+- Vercel: proje `kararveremedim` (GitHub `alper-bayram/KararVeremedim` `main` dalına bağlı, her push production'a deploy edilir). Canlı adres https://kararveremedim.vercel.app. Fonksiyon bölgesi `fra1` (Supabase ile aynı bölge), Python 3.14 (`.python-version`).
+- Vercel ortam değişkenleri (Production + Preview): `DJANGO_SECRET_KEY` ve `DATABASE_URL` (sensitive), `DJANGO_DEBUG=False`. `ALLOWED_HOSTS` ve `CSRF_TRUSTED_ORIGINS` varsayılanları `.vercel.app` alan adlarını kapsar. Üretimde `DATABASE_URL` transaction pooler (port 6543) kullanır.
+- Vercel'in kendi adresinde HTTP→HTTPS yönlendirmesi ve HSTS (`strict-transport-security`) uçta uygulanır; Django'da `SECURE_SSL_REDIRECT` ve `SECURE_HSTS_SECONDS` ayrıca açılmadı (prototip).
