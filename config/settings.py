@@ -36,6 +36,8 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "https://*.vercel.app")
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # Vercel terminates TLS and forwards the original scheme in this header.
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # --- Applications -----------------------------------------------------------
@@ -87,11 +89,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 if DATABASE_URL:
-    DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL, ssl_require=True)}
     # Supabase transaction pooler (port 6543) does not support persistent
-    # connections or server-side cursors.
+    # connections, server-side cursors or server-side prepared statements.
     DATABASES["default"]["CONN_MAX_AGE"] = 0
     DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
+    DATABASES["default"].setdefault("OPTIONS", {})["prepare_threshold"] = None
 else:
     DATABASES = {
         "default": {
