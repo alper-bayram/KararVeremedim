@@ -6,13 +6,15 @@
     </a>
     <nav class="topbar__nav" aria-label="Ana menü">
       {% if user.is_authenticated %}
+        {# TODO(Faz 2): link @username to the user's profile page #}
         <span class="topbar__user">@{{ user.username }}</span>
-        {# TODO(Faz 1): logout as a POST form #}
-        <a class="btn btn--ghost btn--sm" href="#">Çıkış</a>
+        <form method="post" action="{% url 'accounts:logout' %}" class="topbar__logout">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--ghost btn--sm">Çıkış</button>
+        </form>
       {% else %}
-        {# TODO(Faz 1): link to /giris/ and /kayit/ once the account views exist #}
-        <a class="btn btn--ghost btn--sm" href="#">Giriş</a>
-        <a class="btn btn--ghost btn--sm" href="#">Üye ol</a>
+        <a class="btn btn--ghost btn--sm" href="{% url 'accounts:login' %}">Giriş</a>
+        <a class="btn btn--ghost btn--sm" href="{% url 'accounts:register' %}">Üye ol</a>
       {% endif %}
       {# TODO(Faz 2): link to /anket/yeni/ #}
       <a class="btn btn--primary btn--sm topbar__create" href="#">+ Anket oluştur</a>

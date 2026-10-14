@@ -352,6 +352,34 @@ main.container { padding-block: 20px 96px; }
 .empty { padding: 40px 16px; text-align: center; }
 .empty__emoji { margin: 0; font-size: 3rem; }
 
+/* ---------- 8b. Forms & auth pages ---------- */
+.auth-card { max-width: 440px; margin-inline: auto; padding: 28px 24px; }
+.auth-card__title { font-size: 1.5rem; margin-bottom: 4px; }
+.auth-card form { margin-top: 20px; }
+.auth-card__alt { margin: 20px 0 0; text-align: center; }
+
+.field { margin-bottom: 16px; }
+.field__label { display: block; margin-bottom: 6px; font-weight: 600; }
+.field__input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s ease;
+}
+.field__input:hover { border-color: color-mix(in srgb, var(--violet) 35%, var(--border)); }
+.field__input:focus-visible { border-color: var(--violet); outline: 3px solid var(--violet-tint); outline-offset: 0; }
+.field--error .field__input { border-color: var(--pink); }
+.field__help { margin: 6px 0 0; color: var(--muted); font-size: 0.85rem; }
+.field__help--list { margin: -4px 0 16px; padding-left: 20px; }
+.field__error { margin: 6px 0 0; color: #C2185B; font-size: 0.9rem; font-weight: 600; }
+.field__error--box { margin: 0 0 16px; padding: 10px 14px; background: var(--pink-tint); border-radius: var(--radius-sm); }
+.btn--block { display: flex; width: 100%; }
+.topbar__logout { margin: 0; }
+
 /* ---------- 9. Motion ---------- */
 @keyframes pop {
   0%   { transform: scale(1); }

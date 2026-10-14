@@ -449,12 +449,12 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - **Bitti sayılır:** `runserver` ile açılan sayfa tasarım diline uygun görünüyor, `migrate` Supabase'de çalışıyor.
 
 ### Faz 1 — Üyelik
-- [ ] Kayıt formu (e-posta, kullanıcı adı, parola ×2) ve doğrulamaları
-- [ ] Giriş (e-posta + parola) ve çıkış
-- [ ] `next` parametresiyle geri yönlendirme
-- [ ] Üst barda giriş durumuna göre linkler
-- [ ] Django admin'de `User` kaydı (e-posta yalnızca admin'de görünür)
-- [ ] Bölüm 11'deki üyelik testleri
+- [x] Kayıt formu (e-posta, kullanıcı adı, parola ×2) ve doğrulamaları
+- [x] Giriş (e-posta + parola) ve çıkış
+- [x] `next` parametresiyle geri yönlendirme
+- [x] Üst barda giriş durumuna göre linkler
+- [x] Django admin'de `User` kaydı (e-posta yalnızca admin'de görünür)
+- [x] Bölüm 11'deki üyelik testleri
 
 ### Faz 2 — Anket Oluşturma ve Görüntüleme
 - [ ] `Poll`, `Option`, `Vote` modelleri ve migration
