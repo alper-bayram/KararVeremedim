@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load poll_extras %}
+
+{% block title %}{{ poll.question }} — KararVeremedim{% endblock %}
+{% block meta_description %}{{ poll.question }} — KararVeremedim'de bu ankete katıl.{% endblock %}
+
+{% block content %}
+<article class="card poll-card poll-card--detail">
+  <div class="poll-card__meta">
+    <span class="badge badge--{{ poll.category_color }}">{{ poll.category_emoji }} {{ poll.get_category_display }}</span>
+    <span class="muted">
+      <a class="muted-link" href="{% url 'polls:profile' poll.author.username %}">@{{ poll.author.username }}</a>
+      · {{ poll.created_at|time_ago }}
+    </span>
+  </div>
+  <h1 class="poll-card__question">{{ poll.question }}</h1>
+  {% if poll.description %}<p class="poll-card__description">{{ poll.description }}</p>{% endif %}
+
+  <ul class="options">
+    {% for option in poll.options.all %}
+      <li class="option option--{{ option.color }} option--static">{{ option.label }}</li>
+    {% endfor %}
+  </ul>
+
+  <div class="poll-card__footer muted">
+    <span>{{ poll.total_votes }} oy</span>
+    {% if poll.is_open %}
+      <span class="badge badge--mint">{{ poll.expires_at|time_left }}</span>
+    {% else %}
+      <span class="badge badge--gray">Bitti</span>
+    {% endif %}
+  </div>
+</article>
+
+<p class="muted center">Oy verme çok yakında açılıyor 🗳️</p>
+<p class="center"><a href="{% url 'polls:feed' %}">← Tüm anketlere dön</a></p>
+{% endblock %}

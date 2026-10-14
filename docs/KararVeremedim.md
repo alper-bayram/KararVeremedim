@@ -457,14 +457,14 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - [x] Bölüm 11'deki üyelik testleri
 
 ### Faz 2 — Anket Oluşturma ve Görüntüleme
-- [ ] `Poll`, `Option`, `Vote` modelleri ve migration
-- [ ] `services.create_poll` + form + `/anket/yeni/` sayfası (dinamik 2–5 seçenek JS'i)
-- [ ] Ana akış: kart listesi, kategori filtresi, Yeni/Popüler sıralama, sayfalama + "Daha fazla göster"
-- [ ] Anket detay sayfası (oy verme henüz yok, yalnızca seçenekler ve toplam oy sayısı)
-- [ ] Kullanıcı profil sayfası `/u/<username>/`
-- [ ] Misafir için davet bandı ve FAB yönlendirmesi
-- [ ] Django admin'de anket listesi/silme (moderasyon)
-- [ ] Bölüm 11'deki anket testleri
+- [x] `Poll`, `Option`, `Vote` modelleri ve migration
+- [x] `services.create_poll` + form + `/anket/yeni/` sayfası (dinamik 2–5 seçenek JS'i)
+- [x] Ana akış: kart listesi, kategori filtresi, Yeni/Popüler sıralama, sayfalama + "Daha fazla göster"
+- [x] Anket detay sayfası (oy verme henüz yok, yalnızca seçenekler ve toplam oy sayısı)
+- [x] Kullanıcı profil sayfası `/u/<username>/`
+- [x] Misafir için davet bandı ve FAB yönlendirmesi
+- [x] Django admin'de anket listesi/silme (moderasyon)
+- [x] Bölüm 11'deki anket testleri
 
 ### Faz 3 — Oylama ve Sonuçlar
 - [ ] `voter_key` mantığı (üye ID / imzalı misafir çerezi)
@@ -545,3 +545,7 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - Vercel: proje `kararveremedim` (GitHub `alper-bayram/KararVeremedim` `main` dalına bağlı, her push production'a deploy edilir). Canlı adres https://kararveremedim.vercel.app. Fonksiyon bölgesi `fra1` (Supabase ile aynı bölge), Python 3.14 (`.python-version`).
 - Vercel ortam değişkenleri (Production + Preview): `DJANGO_SECRET_KEY` ve `DATABASE_URL` (sensitive), `DJANGO_DEBUG=False`. `ALLOWED_HOSTS` ve `CSRF_TRUSTED_ORIGINS` varsayılanları `.vercel.app` alan adlarını kapsar. Üretimde `DATABASE_URL` transaction pooler (port 6543) kullanır.
 - Vercel'in kendi adresinde HTTP→HTTPS yönlendirmesi ve HSTS (`strict-transport-security`) uçta uygulanır; Django'da `SECURE_SSL_REDIRECT` ve `SECURE_HSTS_SECONDS` ayrıca açılmadı (prototip).
+- "Günde en fazla 10 anket" kuralı kayan 24 saatlik pencereyle uygulanır (takvim günü değil): son 24 saatte açılan anketler sayılır.
+- Ana akış yalnızca açık anketleri listeler; "Bitenleri de göster" seçeneği Faz 4'te eklenecek. Profil sayfası kullanıcının tüm anketlerini (biten dahil) gösterir.
+- Anket detayında oy verme gelene kadar (Faz 3) "Oy verme çok yakında açılıyor" notu gösterilir; Faz 3'te kaldırılır.
+- "Anket oluştur" butonları ve FAB, misafirler için `/kayit/?next=/anket/yeni/` adresine gider (`polls.context_processors.create_poll_url`).

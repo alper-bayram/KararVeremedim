@@ -17,5 +17,6 @@
     {% include "partials/_messages.html" %}
     {% block content %}{% endblock %}
   </main>
+  {% block fab %}<a class="fab" href="{{ create_poll_url }}" aria-label="Anket oluştur">+</a>{% endblock %}
 </body>
 </html>

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}@{{ profile_user.username }} — KararVeremedim{% endblock %}
+{% block meta_description %}@{{ profile_user.username }} kullanıcısının KararVeremedim'de açtığı anketler.{% endblock %}
+
+{% block content %}
+<header class="profile-head">
+  <h1 class="profile-head__name">@{{ profile_user.username }}</h1>
+  <p class="muted">{{ poll_count }} anket</p>
+</header>
+
+<div id="poll-list">
+  {% include "partials/_poll_list.html" %}
+</div>
+{% endblock %}

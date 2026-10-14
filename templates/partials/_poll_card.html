@@ -1,0 +1,26 @@
+{% load poll_extras %}
+<article class="card poll-card">
+  <div class="poll-card__meta">
+    <span class="badge badge--{{ poll.category_color }}">{{ poll.category_emoji }} {{ poll.get_category_display }}</span>
+    <span class="muted">
+      <a class="muted-link" href="{% url 'polls:profile' poll.author.username %}">@{{ poll.author.username }}</a>
+      · {{ poll.created_at|time_ago }}
+    </span>
+  </div>
+  <h2 class="poll-card__question">
+    <a class="poll-card__link" href="{% url 'polls:detail' poll.pk %}">{{ poll.question }}</a>
+  </h2>
+  <ul class="options">
+    {% for option in poll.options.all %}
+      <li class="option option--{{ option.color }} option--static">{{ option.label }}</li>
+    {% endfor %}
+  </ul>
+  <div class="poll-card__footer muted">
+    <span>{{ poll.total_votes }} oy</span>
+    {% if poll.is_open %}
+      <span class="badge badge--mint">{{ poll.expires_at|time_left }}</span>
+    {% else %}
+      <span class="badge badge--gray">Bitti</span>
+    {% endif %}
+  </div>
+</article>

@@ -85,7 +85,8 @@ main.container { padding-block: 20px 96px; }
 }
 
 .topbar__nav { display: flex; align-items: center; gap: 6px; }
-.topbar__user { font-weight: 600; font-size: 0.9rem; }
+.topbar__user { color: var(--text); font-weight: 600; font-size: 0.9rem; text-decoration: none; }
+.topbar__user:hover { color: var(--violet); }
 
 .logo {
   display: inline-flex;
@@ -208,7 +209,7 @@ main.container { padding-block: 20px 96px; }
 .badge--gray   { background: var(--border); }
 
 /* ---------- 6. Options & results ---------- */
-.options { display: grid; gap: 10px; }
+.options { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 
 .option {
   --c: var(--violet);
@@ -352,6 +353,29 @@ main.container { padding-block: 20px 96px; }
 .empty { padding: 40px 16px; text-align: center; }
 .empty__emoji { margin: 0; font-size: 3rem; }
 
+/* ---------- 8a. Poll cards, lists, profile ---------- */
+.option--static {
+  cursor: default;
+  border-color: color-mix(in srgb, var(--c) 35%, transparent);
+}
+.option--static:hover { transform: none; border-color: color-mix(in srgb, var(--c) 35%, transparent); }
+
+.poll-card__link { color: inherit; text-decoration: none; }
+.poll-card__link:hover { text-decoration: underline; text-decoration-color: var(--violet); text-underline-offset: 3px; }
+.poll-card__description { margin: -6px 0 16px; color: var(--muted); white-space: pre-line; }
+.poll-card--detail .poll-card__question { font-size: 1.4rem; }
+.muted-link { color: var(--muted); font-weight: 600; text-decoration: none; }
+.muted-link:hover { color: var(--violet); }
+
+.load-more-wrap { display: flex; justify-content: center; margin: 4px 0 24px; }
+.btn--soft { background: var(--violet-tint); color: var(--violet); font-weight: 800; }
+.btn--soft:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(123, 47, 247, 0.18); }
+
+.center { text-align: center; }
+.profile-head { margin-bottom: 20px; }
+.profile-head__name { font-size: 1.6rem; }
+.profile-head .muted { margin: 4px 0 0; }
+
 /* ---------- 8b. Forms & auth pages ---------- */
 .auth-card { max-width: 440px; margin-inline: auto; padding: 28px 24px; }
 .auth-card__title { font-size: 1.5rem; margin-bottom: 4px; }
@@ -379,6 +403,68 @@ main.container { padding-block: 20px 96px; }
 .field__error--box { margin: 0 0 16px; padding: 10px 14px; background: var(--pink-tint); border-radius: var(--radius-sm); }
 .btn--block { display: flex; width: 100%; }
 .topbar__logout { margin: 0; }
+
+/* ---------- 8c. Poll creation form ---------- */
+.create-card { padding: 28px 24px; }
+.create-card form { margin-top: 20px; }
+textarea.field__input { resize: vertical; min-height: 5.5rem; }
+.fieldset { border: 0; margin-inline: 0; padding: 0; min-width: 0; }
+.fieldset legend { padding: 0; }
+.counter { display: block; margin-top: 4px; color: var(--muted); font-size: 0.8rem; text-align: right; }
+.counter--limit { color: #C2185B; font-weight: 600; }
+
+.category-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.category-card { --c: var(--violet); --tint: var(--violet-tint); position: relative; display: block; cursor: pointer; }
+.category-card--violet { --c: var(--violet); --tint: var(--violet-tint); }
+.category-card--pink   { --c: var(--pink);   --tint: var(--pink-tint); }
+.category-card--orange { --c: var(--orange); --tint: var(--orange-tint); }
+.category-card--yellow { --c: var(--yellow); --tint: var(--yellow-tint); }
+.category-card--mint   { --c: var(--mint);   --tint: var(--mint-tint); }
+.category-card--sky    { --c: var(--sky);    --tint: var(--sky-tint); }
+.category-card input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.category-card { display: flex; }
+.category-card__body {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--tint);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.category-card:hover .category-card__body { border-color: var(--c); }
+/* Selected: filled with the vivid colour, bold text. */
+.category-card input:checked + .category-card__body { background: var(--c); color: #fff; font-weight: 800; }
+.category-card input:focus-visible + .category-card__body { outline: 3px solid var(--violet); outline-offset: 2px; }
+
+.option-row { margin-bottom: 10px; }
+.option-row__input { display: flex; align-items: center; gap: 8px; }
+.option-row__remove {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--pink-tint);
+  color: var(--text);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.option-row__remove:hover { background: var(--pink); color: #fff; }
+.option-row[hidden] { display: none; }
+
+.segmented { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--violet-tint); border-radius: var(--radius-sm); }
+.segmented__item { position: relative; flex: 1 1 28%; text-align: center; cursor: pointer; }
+.segmented__item input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.segmented__item span { display: block; padding: 8px 10px; border-radius: calc(var(--radius-sm) - 4px); font-weight: 600; white-space: nowrap; }
+.segmented__item input:checked + span { background: var(--violet); color: #fff; font-weight: 800; }
+.segmented__item input:focus-visible + span { outline: 3px solid var(--violet); outline-offset: 2px; }
+
+@media (min-width: 480px) {
+  .category-grid { grid-template-columns: repeat(4, 1fr); }
+}
 
 /* ---------- 9. Motion ---------- */
 @keyframes pop {

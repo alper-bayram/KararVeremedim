@@ -6,8 +6,7 @@
     </a>
     <nav class="topbar__nav" aria-label="Ana menü">
       {% if user.is_authenticated %}
-        {# TODO(Faz 2): link @username to the user's profile page #}
-        <span class="topbar__user">@{{ user.username }}</span>
+        <a class="topbar__user" href="{% url 'polls:profile' user.username %}">@{{ user.username }}</a>
         <form method="post" action="{% url 'accounts:logout' %}" class="topbar__logout">
           {% csrf_token %}
           <button type="submit" class="btn btn--ghost btn--sm">Çıkış</button>
@@ -16,8 +15,7 @@
         <a class="btn btn--ghost btn--sm" href="{% url 'accounts:login' %}">Giriş</a>
         <a class="btn btn--ghost btn--sm" href="{% url 'accounts:register' %}">Üye ol</a>
       {% endif %}
-      {# TODO(Faz 2): link to /anket/yeni/ #}
-      <a class="btn btn--primary btn--sm topbar__create" href="#">+ Anket oluştur</a>
+      <a class="btn btn--primary btn--sm topbar__create" href="{{ create_poll_url }}">+ Anket oluştur</a>
     </nav>
   </div>
 </header>

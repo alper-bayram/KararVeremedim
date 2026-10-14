@@ -11,81 +11,17 @@
 {% endif %}
 
 <div class="tabs" role="tablist" aria-label="Sıralama">
-  <a class="tab tab--active" href="#" role="tab" aria-selected="true">Yeni</a>
-  <a class="tab" href="#" role="tab" aria-selected="false">Popüler</a>
+  <a class="tab{% if sort == 'yeni' %} tab--active{% endif %}" href="{{ tab_new_url }}" role="tab" aria-selected="{% if sort == 'yeni' %}true{% else %}false{% endif %}">Yeni</a>
+  <a class="tab{% if sort == 'populer' %} tab--active{% endif %}" href="{{ tab_popular_url }}" role="tab" aria-selected="{% if sort == 'populer' %}true{% else %}false{% endif %}">Popüler</a>
 </div>
 
 <div class="chips" aria-label="Kategoriler">
-  <a class="chip chip--violet chip--active" href="#">Tümü</a>
-  <a class="chip chip--orange" href="#">🍕 Yemek</a>
-  <a class="chip chip--pink" href="#">🎬 Eğlence</a>
-  <a class="chip chip--mint" href="#">🛍️ Alışveriş</a>
-  <a class="chip chip--sky" href="#">✈️ Seyahat</a>
-  <a class="chip chip--yellow" href="#">🎓 Okul &amp; Kariyer</a>
-  <a class="chip chip--pink" href="#">💬 İlişkiler</a>
-  <a class="chip chip--violet" href="#">📱 Teknoloji</a>
-  <a class="chip chip--mint" href="#">✨ Diğer</a>
+  {% for chip in chips %}
+    <a class="chip chip--{{ chip.color }}{% if chip.active %} chip--active{% endif %}" href="{{ chip.url }}"{% if chip.active %} aria-current="true"{% endif %}>{% if chip.emoji %}{{ chip.emoji }} {% endif %}{{ chip.label }}</a>
+  {% endfor %}
 </div>
 
-{# Static demo cards for the design foundation; the real feed arrives in Faz 2 and 3. #}
-<article class="card poll-card">
-  <div class="poll-card__meta">
-    <span class="badge badge--pink">🎬 Eğlence</span>
-    <span class="muted">@ayse · 3 saat önce</span>
-  </div>
-  <h2 class="poll-card__question">Bu akşam sinemaya mı gitsem, restorana mı?</h2>
-  <div class="options">
-    <button type="button" class="option option--violet" data-demo-vote>
-      <span class="option__label">Sinema</span>
-    </button>
-    <button type="button" class="option option--pink" data-demo-vote>
-      <span class="option__label">Restoran</span>
-    </button>
-    <button type="button" class="option option--orange" data-demo-vote>
-      <span class="option__label">Evde dizi maratonu</span>
-    </button>
-  </div>
-  <div class="poll-card__footer muted">
-    <span>42 oy</span>
-    <span class="badge badge--mint">5 saat kaldı</span>
-  </div>
-</article>
-
-<article class="card poll-card">
-  <div class="poll-card__meta">
-    <span class="badge badge--violet">📱 Teknoloji</span>
-    <span class="muted">@mert_k · 1 gün önce</span>
-  </div>
-  <h2 class="poll-card__question">Yeni telefon alırken hangisini seçmeliyim?</h2>
-  <div class="options">
-    <div class="result result--violet result--mine result--leading">
-      <span class="result__bar" style="--percent: 60%"></span>
-      <span class="result__label">✓ Kamerası iyi olan</span>
-      <span class="result__value">60% · 25</span>
-    </div>
-    <div class="result result--pink">
-      <span class="result__bar" style="--percent: 29%"></span>
-      <span class="result__label">Bataryası uzun giden</span>
-      <span class="result__value">29% · 12</span>
-    </div>
-    <div class="result result--sky">
-      <span class="result__bar" style="--percent: 11%"></span>
-      <span class="result__label">Fiyatı uygun olan</span>
-      <span class="result__value">11% · 5</span>
-    </div>
-  </div>
-  <div class="poll-card__footer muted">
-    <span>42 oy</span>
-    <span class="badge badge--gray">Bitti</span>
-  </div>
-</article>
-
-<div class="empty">
-  <p class="empty__emoji" aria-hidden="true">🦗</p>
-  <p>Burası çok sessiz 🦗 İlk kararsızlığı sen paylaş!</p>
-  <a class="btn btn--primary" href="#">Anket oluştur</a>
+<div id="poll-list">
+  {% include "partials/_poll_list.html" %}
 </div>
-
-{# TODO(Faz 2): wire the FAB to /anket/yeni/ (guests go to the register page with ?next=) #}
-<a class="fab" href="#" aria-label="Anket oluştur">+</a>
 {% endblock %}

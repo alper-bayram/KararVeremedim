@@ -21,33 +21,104 @@ function initDismissibleBanners() {
   });
 }
 
-// Design-foundation demo only: turns a demo card's options into result bars.
-// Replaced by the real fetch-based voting flow in Faz 3.
-function initDemoVotes() {
-  document.querySelectorAll("[data-demo-vote]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const options = button.closest(".options");
-      const buttons = [...options.querySelectorAll("[data-demo-vote]")];
-      const shares = [55, 30, 15, 10, 5];
-      buttons.forEach((btn, index) => {
-        const color = [...btn.classList].find((c) => c.startsWith("option--")).replace("option--", "");
-        const result = document.createElement("div");
-        result.className = "result result--" + color + (btn === button ? " result--mine" : "") + (index === 0 ? " result--leading" : "");
-        result.innerHTML =
-          '<span class="result__bar" style="--percent: 0%"></span>' +
-          '<span class="result__label"></span><span class="result__value"></span>';
-        result.querySelector(".result__label").textContent = (btn === button ? "✓ " : "") + btn.textContent.trim();
-        result.querySelector(".result__value").textContent = shares[index] + "%";
-        btn.replaceWith(result);
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          result.querySelector(".result__bar").style.setProperty("--percent", shares[index] + "%");
-        }));
-      });
+// "Daha fazla göster": fetches the next page fragment and appends it.
+// Without JS the button is an ordinary link to the next page.
+function initLoadMore() {
+  const list = document.getElementById("poll-list");
+  if (!list) return;
+
+  list.addEventListener("click", async (event) => {
+    const link = event.target.closest("[data-load-more]");
+    if (!link) return;
+    event.preventDefault();
+    if (link.getAttribute("aria-busy") === "true") return;
+
+    link.setAttribute("aria-busy", "true");
+    const label = link.textContent;
+    link.textContent = "Yükleniyor…";
+    try {
+      const url = new URL(link.href, window.location.href);
+      url.searchParams.set("partial", "1");
+      const response = await fetch(url, { headers: { "X-Requested-With": "fetch" } });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const template = document.createElement("template");
+      template.innerHTML = await response.text();
+      link.closest(".load-more-wrap").remove();
+      list.append(template.content);
+    } catch (error) {
+      link.textContent = label;
+      link.removeAttribute("aria-busy");
+      window.location.href = link.href; // fall back to a normal page load
+    }
+  });
+}
+
+// Poll creation form: live character counters and 2-5 dynamic option fields.
+function initPollForm() {
+  const form = document.querySelector("[data-poll-form]");
+  if (!form) return;
+
+  form.querySelectorAll("[data-counter]").forEach((field) => {
+    const limit = Number(field.dataset.counter);
+    const counter = document.createElement("span");
+    counter.className = "counter";
+    counter.setAttribute("aria-live", "polite");
+    field.insertAdjacentElement("afterend", counter);
+    const update = () => {
+      const length = field.value.length;
+      counter.textContent = length + "/" + limit;
+      counter.classList.toggle("counter--limit", length >= limit);
+    };
+    field.addEventListener("input", update);
+    update();
+  });
+
+  const MIN = 2;
+  const rows = [...form.querySelectorAll("[data-option-row]")];
+  const addButton = form.querySelector("[data-add-option]");
+  const inputOf = (row) => row.querySelector("input");
+  const hasContent = (row) => inputOf(row).value.trim() !== "" || row.querySelector(".field__error");
+
+  // Show the first two rows plus any row that is filled or has an error.
+  let visible = MIN;
+  rows.forEach((row, index) => {
+    if (hasContent(row)) visible = Math.max(visible, index + 1);
+  });
+
+  function render() {
+    rows.forEach((row, index) => {
+      row.hidden = index >= visible;
+      row.querySelector("[data-remove-option]").hidden = index < MIN; // x from the 3rd option on
+    });
+    addButton.hidden = visible >= rows.length;
+  }
+
+  addButton.addEventListener("click", () => {
+    if (visible < rows.length) {
+      visible += 1;
+      render();
+      inputOf(rows[visible - 1]).focus();
+    }
+  });
+
+  rows.forEach((row, index) => {
+    row.querySelector("[data-remove-option]").addEventListener("click", () => {
+      if (visible <= MIN) return;
+      // Shift later values up so no gap is left, then hide the last visible row.
+      for (let i = index; i < visible - 1; i++) {
+        inputOf(rows[i]).value = inputOf(rows[i + 1]).value;
+      }
+      inputOf(rows[visible - 1]).value = "";
+      visible -= 1;
+      render();
     });
   });
+
+  render();
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initDismissibleBanners();
-  initDemoVotes();
+  initLoadMore();
+  initPollForm();
 });

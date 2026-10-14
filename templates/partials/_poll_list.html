@@ -1,0 +1,16 @@
+{% for poll in page %}
+  {% include "partials/_poll_card.html" %}
+{% empty %}
+  {% if page.number == 1 %}
+    <div class="empty">
+      <p class="empty__emoji" aria-hidden="true">🦗</p>
+      <p>Burası çok sessiz 🦗 İlk kararsızlığı sen paylaş!</p>
+      <a class="btn btn--primary" href="{{ create_poll_url }}">Anket oluştur</a>
+    </div>
+  {% endif %}
+{% endfor %}
+{% if next_page_url %}
+  <div class="load-more-wrap">
+    <a class="btn btn--soft" href="{{ next_page_url }}" data-load-more>Daha fazla göster</a>
+  </div>
+{% endif %}

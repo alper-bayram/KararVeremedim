@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Yeni anket — KararVeremedim{% endblock %}
+{% block fab %}{% endblock %}
+
+{% block content %}
+<section class="card create-card">
+  <h1 class="auth-card__title">Kararsız mısın? Sor 🤔</h1>
+  <p class="muted">Soruyu yaz, 2-5 seçenek ekle; herkes oy versin.</p>
+
+  <form method="post" novalidate data-poll-form>
+    {% csrf_token %}
+
+    {% for error in form.non_field_errors %}
+      <p class="field__error field__error--box" role="alert">{{ error }}</p>
+    {% endfor %}
+
+    {% include "partials/_field.html" with field=form.question %}
+    {% include "partials/_field.html" with field=form.description %}
+
+    <fieldset class="field fieldset">
+      <legend class="field__label">Kategori</legend>
+      <div class="category-grid">
+        {% for category in categories %}
+          <label class="category-card category-card--{{ category.color }}">
+            <input type="radio" name="category" value="{{ category.value }}" {% if form.category.value == category.value %}checked{% endif %} required>
+            <span class="category-card__body"><span aria-hidden="true">{{ category.emoji }}</span> {{ category.label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+      {% for error in form.category.errors %}<p class="field__error" role="alert">{{ error }}</p>{% endfor %}
+    </fieldset>
+
+    <fieldset class="field fieldset">
+      <legend class="field__label">Seçenekler</legend>
+      <div data-options>
+        {% for field in form.option_fields %}
+          <div class="option-row" data-option-row>
+            <div class="option-row__input">
+              {{ field }}
+              <button type="button" class="option-row__remove" data-remove-option aria-label="{{ field.label }} alanını sil" hidden>×</button>
+            </div>
+            {% for error in field.errors %}<p class="field__error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="btn btn--soft btn--sm" data-add-option hidden>+ Seçenek ekle</button>
+    </fieldset>
+
+    <fieldset class="field fieldset">
+      <legend class="field__label">Süre</legend>
+      <div class="segmented">
+        {% for radio in form.duration %}
+          <label class="segmented__item">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+        {% endfor %}
+      </div>
+      {% for error in form.duration.errors %}<p class="field__error" role="alert">{{ error }}</p>{% endfor %}
+    </fieldset>
+
+    <button type="submit" class="btn btn--primary btn--block">Anketi yayınla</button>
+  </form>
+</section>
+{% endblock %}
