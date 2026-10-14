@@ -540,3 +540,4 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - `LANGUAGE_CODE="tr"`, `TIME_ZONE="Europe/Istanbul"`.
 - "Popüler" sıralaması: son 24 saatte verilen oy sayısına göre; eşitlikte yeni olan öne çıkar.
 - Misafir sonradan üye olursa `voter_key` değiştiği için eski misafir oyları taşınmaz ve yeniden oy verebilir (prototip için kabul edildi).
+- Deploy sırası: Faz 5 (Vercel yayını), Faz 1 bittikten hemen sonra yapılacak; Vercel'e özgü sorunlar erken yakalansın diye.
