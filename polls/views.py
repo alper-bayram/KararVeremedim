@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 
 from . import services
 from .forms import PollForm
@@ -17,6 +18,7 @@ User = get_user_model()
 
 PAGE_SIZE = 20
 SORT_NEW, SORT_POPULAR = "yeni", "populer"
+
 
 
 def _with_counts(queryset):
@@ -101,12 +103,20 @@ def feed(request):
     )
 
 
+@never_cache
 @login_required
 def create(request):
     if request.method == "POST":
         form = PollForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+            duplicate = services.find_recent_duplicate(
+                author=request.user, question=data["question"], options=data["options"]
+            )
+            if duplicate:
+                # Same form submitted again (double click, Back button): show the existing poll.
+                messages.info(request, "Bu anketi zaten yayınladın.")
+                return redirect("polls:detail", pk=duplicate.pk)
             try:
                 poll = services.create_poll(
                     author=request.user,

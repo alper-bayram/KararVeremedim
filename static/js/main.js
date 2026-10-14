@@ -115,6 +115,19 @@ function initPollForm() {
   });
 
   render();
+
+  // Block a second click while the first submit is in flight.
+  const submitButton = form.querySelector("button[type=submit]");
+  const submitLabel = submitButton.textContent;
+  form.addEventListener("submit", () => {
+    submitButton.disabled = true;
+    submitButton.textContent = "Yayınlanıyor…";
+  });
+  // Restore the button if the browser brings this page back from its cache.
+  window.addEventListener("pageshow", () => {
+    submitButton.disabled = false;
+    submitButton.textContent = submitLabel;
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {

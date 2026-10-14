@@ -549,3 +549,4 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - Ana akış yalnızca açık anketleri listeler; "Bitenleri de göster" seçeneği Faz 4'te eklenecek. Profil sayfası kullanıcının tüm anketlerini (biten dahil) gösterir.
 - Anket detayında oy verme gelene kadar (Faz 3) "Oy verme çok yakında açılıyor" notu gösterilir; Faz 3'te kaldırılır.
 - "Anket oluştur" butonları ve FAB, misafirler için `/kayit/?next=/anket/yeni/` adresine gider (`polls.context_processors.create_poll_url`).
+- Aynı kullanıcının aynı soru ve seçeneklerle 10 dakika içinde tekrar gönderdiği anket yeni anket oluşturmaz; mevcut ankete yönlendirilir ("Bu anketi zaten yayınladın."). Geri tuşu / çift tıklama kaynaklı mükerrer anketleri önlemek içindir.

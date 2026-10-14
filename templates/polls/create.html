@@ -8,7 +8,7 @@
   <h1 class="auth-card__title">Kararsız mısın? Sor 🤔</h1>
   <p class="muted">Soruyu yaz, 2-5 seçenek ekle; herkes oy versin.</p>
 
-  <form method="post" novalidate data-poll-form>
+  <form method="post" novalidate autocomplete="off" data-poll-form>
     {% csrf_token %}
 
     {% for error in form.non_field_errors %}

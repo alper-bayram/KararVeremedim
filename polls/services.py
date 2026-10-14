@@ -13,6 +13,9 @@ QUESTION_MIN, QUESTION_MAX = 10, 200
 DESCRIPTION_MAX = 500
 OPTION_MAX = 80
 DAILY_POLL_LIMIT = 10
+# Re-submitting an identical poll within this window (double click, Back button)
+# returns the existing poll instead of publishing a duplicate.
+DUPLICATE_WINDOW = timedelta(minutes=10)
 
 # key -> (label, lifetime)
 DURATIONS = {
@@ -41,6 +44,20 @@ class DailyLimitError(PollError):
 def normalize_options(raw_options) -> list[str]:
     """Trims options and drops blank ones."""
     return [option.strip() for option in raw_options if option and option.strip()]
+
+
+def find_recent_duplicate(*, author: User, question: str, options: list[str]) -> Poll | None:
+    """The author's poll with the same question and options created moments ago, if any."""
+    wanted = [option.lower() for option in normalize_options(options)]
+    recent = Poll.objects.filter(
+        author=author,
+        question__iexact=(question or "").strip(),
+        created_at__gte=timezone.now() - DUPLICATE_WINDOW,
+    ).prefetch_related("options")
+    for poll in recent:
+        if [option.label.lower() for option in poll.options.all()] == wanted:
+            return poll
+    return None
 
 
 def create_poll(

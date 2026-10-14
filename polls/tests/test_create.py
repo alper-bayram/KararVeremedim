@@ -201,3 +201,60 @@ class PasswordNotUsedTest(TestCase):
         # Guards the shared test password against validator changes.
         user = make_user("kontrol")
         self.assertTrue(user.check_password(PASSWORD))
+
+
+class DuplicateSubmissionTests(TestCase):
+    url = reverse("polls:create")
+
+    def setUp(self):
+        self.user = make_user("ayse")
+        self.client.force_login(self.user)
+
+    def test_resubmitting_the_same_poll_does_not_create_a_second_one(self):
+        first = self.client.post(self.url, poll_data())
+        second = self.client.post(self.url, poll_data())  # e.g. Back button, then submit again
+        poll = Poll.objects.get()
+        detail = reverse("polls:detail", args=[poll.pk])
+        self.assertRedirects(first, detail, fetch_redirect_response=False)
+        self.assertRedirects(second, detail, fetch_redirect_response=False)
+
+    def test_resubmission_explains_what_happened(self):
+        self.client.post(self.url, poll_data())
+        response = self.client.post(self.url, poll_data(), follow=True)
+        self.assertContains(response, "Bu anketi zaten yayınladın.")
+        self.assertEqual(Poll.objects.count(), 1)
+
+    def test_comparison_ignores_case_and_surrounding_spaces(self):
+        self.client.post(self.url, poll_data())
+        self.client.post(
+            self.url,
+            poll_data(question="  BU akşam sinemaya mı gitsem, restorana mı?  ", option_1=" SINEMA "),
+        )
+        self.assertEqual(Poll.objects.count(), 1)
+
+    def test_different_options_make_a_different_poll(self):
+        self.client.post(self.url, poll_data())
+        self.client.post(self.url, poll_data(option_2="Evde kal"))
+        self.assertEqual(Poll.objects.count(), 2)
+
+    def test_different_question_makes_a_different_poll(self):
+        self.client.post(self.url, poll_data())
+        self.client.post(self.url, poll_data(question="Bu akşam başka bir şey mi yapsam?"))
+        self.assertEqual(Poll.objects.count(), 2)
+
+    def test_same_poll_can_be_published_again_after_the_window(self):
+        self.client.post(self.url, poll_data())
+        Poll.objects.update(created_at=timezone.now() - services.DUPLICATE_WINDOW - timedelta(minutes=1))
+        self.client.post(self.url, poll_data())
+        self.assertEqual(Poll.objects.count(), 2)
+
+    def test_another_users_identical_poll_is_not_a_duplicate(self):
+        self.client.post(self.url, poll_data())
+        self.client.force_login(make_user("mehmet"))
+        self.client.post(self.url, poll_data())
+        self.assertEqual(Poll.objects.count(), 2)
+
+    def test_create_page_is_not_cached_and_disables_form_restoration(self):
+        response = self.client.get(self.url)
+        self.assertIn("no-store", response.headers["Cache-Control"])
+        self.assertContains(response, 'autocomplete="off"')
