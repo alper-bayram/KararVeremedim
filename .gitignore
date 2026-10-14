@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Secrets and local config
+.env
+.env.local
+
+# Local database and build output
+db.sqlite3
+staticfiles/
+
+# Editor
+.idea/
+.vscode/
+.DS_Store
+
+# Vercel
+.vercel/
+
+# Claude Code local config
+.claude/

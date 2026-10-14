@@ -1,0 +1,367 @@
+/* KararVeremedim — main.css
+   Sections: 1 Variables · 2 Base · 3 Layout · 4 Buttons · 5 Cards · 6 Options & results
+             7 Chips & tabs · 8 Misc · 9 Motion */
+
+/* ---------- 1. Variables ---------- */
+:root {
+  /* background and text */
+  --bg: #FBF9FF;
+  --surface: #FFFFFF;
+  --text: #1F1B2E;
+  --muted: #6E6A80;
+  --border: #ECE8F5;
+
+  /* vivid accents */
+  --violet: #7B2FF7;
+  --pink:   #FF3D81;
+  --orange: #FF8A1F;
+  --yellow: #FFC233;
+  --mint:   #12C99B;
+  --sky:    #2D8CFF;
+
+  /* tints: washed-out versions of the accents */
+  --violet-tint: color-mix(in srgb, var(--violet) 12%, white);
+  --pink-tint:   color-mix(in srgb, var(--pink) 12%, white);
+  --orange-tint: color-mix(in srgb, var(--orange) 14%, white);
+  --yellow-tint: color-mix(in srgb, var(--yellow) 18%, white);
+  --mint-tint:   color-mix(in srgb, var(--mint) 14%, white);
+  --sky-tint:    color-mix(in srgb, var(--sky) 12%, white);
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 6px 24px rgba(123, 47, 247, 0.08);
+}
+
+/* ---------- 2. Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1, h2, h3 { font-weight: 800; line-height: 1.25; margin: 0; }
+
+a { color: var(--violet); }
+
+:focus-visible {
+  outline: 3px solid var(--violet);
+  outline-offset: 2px;
+}
+
+.muted { color: var(--muted); font-size: 0.875rem; }
+
+/* ---------- 3. Layout ---------- */
+.container {
+  width: 100%;
+  max-width: 680px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+
+main.container { padding-block: 20px 96px; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+}
+
+.topbar__nav { display: flex; align-items: center; gap: 6px; }
+.topbar__user { font-weight: 600; font-size: 0.9rem; }
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.logo__accent {
+  background: linear-gradient(90deg, var(--violet), var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+
+/* ---------- 4. Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn--sm { padding: 8px 14px; font-size: 0.9rem; }
+
+.btn--primary {
+  background: linear-gradient(90deg, var(--violet), var(--pink));
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(123, 47, 247, 0.25);
+}
+.btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(123, 47, 247, 0.35);
+}
+
+.btn--ghost { background: transparent; color: var(--text); }
+.btn--ghost:hover { background: var(--violet-tint); }
+
+.fab {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet), var(--pink));
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgba(123, 47, 247, 0.4);
+  transition: transform 0.15s ease;
+}
+.fab:hover { transform: translateY(-2px) scale(1.04); }
+
+/* Mobile: the FAB creates polls. Desktop: the top bar button does. */
+.topbar .topbar__create { display: none; }
+
+@media (min-width: 768px) {
+  .topbar .topbar__create { display: inline-flex; }
+  .fab { display: none; }
+}
+
+/* ---------- 5. Cards ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.poll-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.poll-card__question { font-size: 1.2rem; margin-bottom: 16px; }
+.poll-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.badge--violet { background: var(--violet-tint); }
+.badge--pink   { background: var(--pink-tint); }
+.badge--orange { background: var(--orange-tint); }
+.badge--yellow { background: var(--yellow-tint); }
+.badge--mint   { background: var(--mint-tint); }
+.badge--sky    { background: var(--sky-tint); }
+.badge--gray   { background: var(--border); }
+
+/* ---------- 6. Options & results ---------- */
+.options { display: grid; gap: 10px; }
+
+.option {
+  --c: var(--violet);
+  --tint: var(--violet-tint);
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--tint);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.option:hover { border-color: var(--c); transform: translateY(-1px); }
+
+.option--violet { --c: var(--violet); --tint: var(--violet-tint); }
+.option--pink   { --c: var(--pink);   --tint: var(--pink-tint); }
+.option--orange { --c: var(--orange); --tint: var(--orange-tint); }
+.option--mint   { --c: var(--mint);   --tint: var(--mint-tint); }
+.option--sky    { --c: var(--sky);    --tint: var(--sky-tint); }
+
+.result {
+  --c: var(--violet);
+  --tint: var(--violet-tint);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  overflow: hidden;
+  background: var(--tint);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.result--violet { --c: var(--violet); --tint: var(--violet-tint); }
+.result--pink   { --c: var(--pink);   --tint: var(--pink-tint); }
+.result--orange { --c: var(--orange); --tint: var(--orange-tint); }
+.result--mint   { --c: var(--mint);   --tint: var(--mint-tint); }
+.result--sky    { --c: var(--sky);    --tint: var(--sky-tint); }
+
+/* The bar sits behind the text and is filled with the vivid colour at low
+   opacity so dark text on top stays readable. */
+.result__bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--percent, 0%);
+  background: var(--c);
+  opacity: 0.28;
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.result__label, .result__value { position: relative; }
+.result__value { font-weight: 800; white-space: nowrap; }
+
+.result--mine { border-color: var(--c); animation: pop 0.35s ease; }
+.result--leading .result__bar { opacity: 0.45; }
+.result--leading .result__value { color: var(--text); }
+
+/* ---------- 7. Chips & tabs ---------- */
+.chips {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px 20px;
+  padding: 4px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar { display: none; }
+
+.chip {
+  --c: var(--violet);
+  --tint: var(--violet-tint);
+  flex: none;
+  padding: 8px 14px;
+  background: var(--tint);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+.chip:hover { transform: translateY(-1px); }
+.chip--violet { --c: var(--violet); --tint: var(--violet-tint); }
+.chip--pink   { --c: var(--pink);   --tint: var(--pink-tint); }
+.chip--orange { --c: var(--orange); --tint: var(--orange-tint); }
+.chip--yellow { --c: var(--yellow); --tint: var(--yellow-tint); }
+.chip--mint   { --c: var(--mint);   --tint: var(--mint-tint); }
+.chip--sky    { --c: var(--sky);    --tint: var(--sky-tint); }
+/* Selected chip: filled with the vivid colour, white bold text. */
+.chip--active { background: var(--c); color: #fff; font-weight: 800; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab {
+  padding: 8px 18px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+.tab--active { background: var(--text); color: #fff; }
+
+/* ---------- 8. Misc ---------- */
+.invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: var(--yellow-tint);
+  border-radius: var(--radius-sm);
+}
+.invite p { margin: 0; }
+.invite__close {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.messages { list-style: none; margin: 0 0 20px; padding: 0; }
+.message {
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  background: var(--mint-tint);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+.message--error { background: var(--pink-tint); }
+
+.empty { padding: 40px 16px; text-align: center; }
+.empty__emoji { margin: 0; font-size: 3rem; }
+
+/* ---------- 9. Motion ---------- */
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
