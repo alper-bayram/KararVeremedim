@@ -440,8 +440,8 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 ### Faz 0 — İskelet ve Tasarım Temeli
 - [x] Django projesi (`config`) ve `accounts`, `polls` uygulamaları
 - [x] **Özel `User` modeli** (bölüm 3.4) ve ilk migration
-- [ ] `.env` okuma, `DATABASE_URL` ile Supabase bağlantısı (bölüm 2.1) — kod hazır, Supabase projesi açılınca `DATABASE_URL` ile doğrulanacak
-- [ ] Supabase güvenliği için RLS migration'ı (bölüm 2.2) — `accounts/0002` yazıldı, PostgreSQL'de henüz çalıştırılmadı (SQLite'ta atlanır)
+- [x] `.env` okuma, `DATABASE_URL` ile Supabase bağlantısı (bölüm 2.1)
+- [x] Supabase güvenliği için RLS migration'ı (bölüm 2.2) — Supabase'de çalıştırıldı, 10 tablonun hepsinde RLS açık (doğrulandı)
 - [x] `requirements.txt`, `.env.example`, `.gitignore`
 - [x] `base.html`: üst bar, mesaj alanı, Google Font, `main.css` ve `main.js` bağlantıları
 - [x] `main.css`: renk değişkenleri, tipografi, buton/kart/chip temel stilleri (bölüm 8)
@@ -535,7 +535,7 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - Silinen kullanıcının anketleri de silinir. Verdiği oylar ise anonim olarak kalır (`SET_NULL`).
 - Parola sıfırlama prototipte yok.
 - Python sürümü: `.venv` Python 3.14 ile kuruldu. Vercel 3.12 (varsayılan), 3.13 ve 3.14'ü destekliyor (doğrulandı, Ekim 2026).
-- Supabase projesi henüz yok: `DATABASE_URL` boşsa SQLite'a düşülür. Proje açılınca `.env`'ye session pooler adresi (port 5432) yazılıp yerelden `migrate` çalıştırılacak.
+- Supabase projesi: `KararVeremedim` (ref `lldnoujwdhfbsmcdeoss`, bölge `eu-central-1`, ücretsiz plan). Yerelde session pooler (`aws-1-eu-central-1.pooler.supabase.com:5432`) kullanılır; `DATABASE_URL` boşsa SQLite'a düşülür. Testler SQLite ile çalıştırılır (`DATABASE_URL= python manage.py test`). Üretimde transaction pooler (6543) kullanılacak (Faz 5).
 - RLS migration'ı `public` şemasındaki tüm tablolara RLS açar (Django'nun kendi tabloları dahil). Yeni tablo ekleyen her fazın migration'ına aynı `config.rls.enable_rls_on_public_tables` eklenir.
 - `LANGUAGE_CODE="tr"`, `TIME_ZONE="Europe/Istanbul"`.
 - "Popüler" sıralaması: son 24 saatte verilen oy sayısına göre; eşitlikte yeni olan öne çıkar.
