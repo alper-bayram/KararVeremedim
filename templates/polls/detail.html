@@ -44,6 +44,9 @@
 
   {% if poll.is_owner %}
     <div class="owner-actions">
+      {% if poll.can_edit %}
+        <a class="btn btn--soft btn--sm" href="{% url 'polls:edit' poll.pk %}">Düzenle</a>
+      {% endif %}
       {% if poll.is_open %}
         <form method="post" action="{% url 'polls:close' poll.pk %}"
               data-confirm="Anketi şimdi bitirmek istediğine emin misin? Oy verme kapanır ve sonuçlar herkese açılır.">

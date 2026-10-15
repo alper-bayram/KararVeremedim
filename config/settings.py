@@ -22,7 +22,15 @@ def env_list(name: str, default: str = "") -> list[str]:
 
 # --- Core -------------------------------------------------------------------
 
-DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("1", "true", "yes")
+def env_flag(name: str, default: bool = False) -> bool:
+    return os.environ.get(name, str(default)).lower() in ("1", "true", "yes")
+
+
+DEBUG = env_flag("DJANGO_DEBUG")
+
+# "Parolamı unuttum" page: built but off until password reset is implemented
+# (it only collects an e-mail address and does not send anything yet).
+PASSWORD_RESET_PAGE_ENABLED = env_flag("PASSWORD_RESET_PAGE_ENABLED")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "")
 if not SECRET_KEY:
@@ -76,6 +84,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "polls.context_processors.create_poll_url",
+                "accounts.context_processors.features",
             ],
         },
     },
@@ -108,6 +117,9 @@ else:
 # --- Auth -------------------------------------------------------------------
 
 AUTH_USER_MODEL = "accounts.User"
+
+# Sign in with e-mail address or username (see accounts/backends.py).
+AUTHENTICATION_BACKENDS = ["accounts.backends.EmailOrUsernameBackend"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

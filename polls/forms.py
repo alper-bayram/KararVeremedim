@@ -110,3 +110,18 @@ class PollForm(forms.Form):
 
         cleaned["options"] = [value for _, value in filled]
         return cleaned
+
+
+class PollEditForm(PollForm):
+    """Same fields as creation, except the duration (an open poll keeps its end time)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        del self.fields["duration"]
+
+    @classmethod
+    def initial_for(cls, poll) -> dict:
+        initial = {"question": poll.question, "description": poll.description, "category": poll.category}
+        for name, option in zip(OPTION_FIELDS, poll.options.all()):
+            initial[name] = option.label
+        return initial

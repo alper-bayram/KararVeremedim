@@ -21,3 +21,6 @@ staticfiles/
 
 # Claude Code local config
 .claude/
+
+# Demo accounts written by `manage.py seed_demo`
+seed_credentials*.txt

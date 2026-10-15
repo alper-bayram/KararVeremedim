@@ -18,6 +18,9 @@
     {% include "partials/_field.html" with field=form.password %}
 
     <button type="submit" class="btn btn--primary btn--block">Giriş yap</button>
+    {% if password_reset_enabled %}
+      <p class="auth-card__alt"><a href="{% url 'accounts:password_reset' %}">Parolamı unuttum</a></p>
+    {% endif %}
   </form>
 
   <p class="auth-card__alt muted">

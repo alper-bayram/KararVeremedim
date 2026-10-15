@@ -252,7 +252,23 @@ function initShare() {
   });
 }
 
+// The user menu is a <details>; also close it when clicking elsewhere or pressing Escape.
+function initUserMenu() {
+  const menu = document.querySelector("[data-usermenu]");
+  if (!menu) return;
+  document.addEventListener("click", (event) => {
+    if (menu.open && !menu.contains(event.target)) menu.open = false;
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menu.open) {
+      menu.open = false;
+      menu.querySelector("summary").focus();
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  initUserMenu();
   initDismissibleBanners();
   initLoadMore();
   initPollForm();

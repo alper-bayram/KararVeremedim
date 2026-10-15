@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, password_validation
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from .forms import RegisterForm
+from .forms import PasswordResetRequestForm, RegisterForm
 
 
 def _safe_next_url(request) -> str:
@@ -42,3 +44,23 @@ def register(request):
             "password_help": password_validation.password_validators_help_texts(),
         },
     )
+
+
+def password_reset_request(request):
+    """"Parolamı unuttum": collects the e-mail address, then only shows a waiting notice.
+
+    Deliberately inert: nothing is stored or sent, and the answer is identical for
+    existing and unknown addresses. Hidden (404) unless PASSWORD_RESET_PAGE_ENABLED is on.
+    """
+    if not settings.PASSWORD_RESET_PAGE_ENABLED:
+        raise Http404
+    if request.user.is_authenticated:
+        return redirect("polls:feed")
+
+    submitted = False
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        submitted = form.is_valid()
+    else:
+        form = PasswordResetRequestForm()
+    return render(request, "accounts/password_reset.html", {"form": form, "submitted": submitted})

@@ -11,11 +11,12 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from . import services, utils
-from .forms import PollForm
+from .forms import PollEditForm, PollForm
 from .models import CATEGORY_COLOR, CATEGORY_EMOJI, Category, Poll, Vote
 
 User = get_user_model()
@@ -61,6 +62,9 @@ def _attach_viewer_state(request, polls) -> None:
         poll.is_owner = request.user.is_authenticated and poll.author_id == request.user.pk
         poll.my_option_id = my_votes.get(poll.pk)
         poll.can_vote = poll.is_open and not poll.is_owner
+        poll.can_edit = poll.is_owner and services.is_editable(
+            poll, has_votes=getattr(poll, "total_votes", 0) > 0
+        )
         poll.show_results = services.results_visible(
             poll=poll, is_owner=poll.is_owner, has_voted=poll.my_option_id is not None
         )
@@ -81,6 +85,8 @@ def _render_poll_list(request, queryset, *, template, context):
     context = {
         **context,
         "page": page,
+        # Where owner actions on cards send the user back to (first page, same filters, never a fragment).
+        "return_url": _url(request.path, **params),
         "next_page_url": _url(request.path, **params, sayfa=page.next_page_number()) if page.has_next() else "",
     }
     if request.GET.get("partial"):
@@ -142,6 +148,15 @@ def feed(request):
             "has_filter": bool(category),
         },
     )
+
+
+def _safe_next(request, default: str) -> str:
+    """The `next` form value if it points back to this site, otherwise `default`."""
+    candidate = request.POST.get("next", "")
+    allowed = url_has_allowed_host_and_scheme(
+        candidate, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    )
+    return candidate if allowed and candidate else default
 
 
 @never_cache
@@ -255,7 +270,7 @@ def close(request, pk):
         messages.info(request, str(error))
     else:
         messages.success(request, "Anket bitirildi. Sonuçlar artık herkese açık.")
-    return redirect("polls:detail", pk=poll.pk)
+    return redirect(_safe_next(request, reverse("polls:detail", args=[poll.pk])))
 
 
 @require_POST
@@ -268,4 +283,52 @@ def delete(request, pk):
     except services.NotOwnerError:
         raise PermissionDenied from None
     messages.success(request, "Anket silindi.")
-    return redirect("polls:profile", username=request.user.username)
+    return redirect(_safe_next(request, reverse("polls:profile", args=[request.user.username])))
+
+
+@login_required
+def mine(request):
+    """"Anketlerim": the viewer's own polls with edit / close / delete actions."""
+    polls = _with_counts(Poll.objects.filter(author=request.user))
+    return _render_poll_list(request, polls, template="polls/mine.html", context={"manage": True})
+
+
+@never_cache
+@login_required
+def edit(request, pk):
+    poll = get_object_or_404(Poll.objects.prefetch_related("options"), pk=pk)
+    if poll.author_id != request.user.pk:
+        raise PermissionDenied
+    if not services.is_editable(poll, has_votes=poll.votes.exists()):
+        messages.error(request, "Sona ermiş ya da oy almış anketler düzenlenemez.")
+        return redirect("polls:detail", pk=poll.pk)
+
+    if request.method == "POST":
+        form = PollEditForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            try:
+                services.update_poll(
+                    poll=poll,
+                    user=request.user,
+                    question=data["question"],
+                    description=data["description"],
+                    category=data["category"],
+                    options=data["options"],
+                )
+            except services.PollNotEditableError as error:
+                messages.error(request, str(error))
+                return redirect("polls:detail", pk=poll.pk)
+            except services.PollError as error:
+                form.add_error(None, str(error))
+            else:
+                messages.success(request, "Anket güncellendi.")
+                return redirect("polls:detail", pk=poll.pk)
+    else:
+        form = PollEditForm(initial=PollEditForm.initial_for(poll))
+
+    categories = [
+        {"value": value, "label": label, "emoji": CATEGORY_EMOJI[value], "color": CATEGORY_COLOR[value]}
+        for value, label in Category.choices
+    ]
+    return render(request, "polls/create.html", {"form": form, "categories": categories, "editing_poll": poll})

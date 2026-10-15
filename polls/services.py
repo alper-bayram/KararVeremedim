@@ -43,8 +43,12 @@ class DailyLimitError(PollError):
     pass
 
 
+class PollNotEditableError(PollError):
+    pass
+
+
 class NotOwnerError(PollError):
-    """Only the author may close or delete a poll."""
+    """Only the author may edit, close or delete a poll."""
 
     status_code = 403
 
@@ -86,15 +90,8 @@ def find_recent_duplicate(*, author: User, question: str, options: list[str]) ->
     return None
 
 
-def create_poll(
-    *,
-    author: User,
-    question: str,
-    description: str = "",
-    category: str,
-    options: list[str],
-    duration: str = DEFAULT_DURATION,
-) -> Poll:
+def validate_poll_fields(*, question, description, category, options) -> tuple[str, str, list[str]]:
+    """Normalises and validates the user-editable poll fields (shared by create and update)."""
     question = (question or "").strip()
     description = (description or "").strip()
     options = normalize_options(options)
@@ -105,14 +102,29 @@ def create_poll(
         raise InvalidPollError(f"Açıklama en fazla {DESCRIPTION_MAX} karakter olabilir.")
     if category not in Category.values:
         raise InvalidPollError("Geçerli bir kategori seç.")
-    if duration not in DURATIONS:
-        raise InvalidPollError("Geçerli bir süre seç.")
     if not MIN_OPTIONS <= len(options) <= MAX_OPTIONS:
         raise InvalidPollError(f"Anket {MIN_OPTIONS}-{MAX_OPTIONS} seçenek içermeli.")
     if any(len(option) > OPTION_MAX for option in options):
         raise InvalidPollError(f"Her seçenek en fazla {OPTION_MAX} karakter olabilir.")
     if len({option.lower() for option in options}) != len(options):
         raise InvalidPollError("Aynı seçenek birden fazla kez eklenemez.")
+    return question, description, options
+
+
+def create_poll(
+    *,
+    author: User,
+    question: str,
+    description: str = "",
+    category: str,
+    options: list[str],
+    duration: str = DEFAULT_DURATION,
+) -> Poll:
+    question, description, options = validate_poll_fields(
+        question=question, description=description, category=category, options=options
+    )
+    if duration not in DURATIONS:
+        raise InvalidPollError("Geçerli bir süre seç.")
 
     now = timezone.now()
     with transaction.atomic():
@@ -129,6 +141,39 @@ def create_poll(
             category=category,
             expires_at=now + DURATIONS[duration][1],
         )
+        Option.objects.bulk_create(
+            [Option(poll=poll, label=label, position=index) for index, label in enumerate(options)]
+        )
+    return poll
+
+
+def is_editable(poll: Poll, *, has_votes: bool) -> bool:
+    """Polls may be edited only while they are open and nobody has voted yet."""
+    return poll.is_open and not has_votes
+
+
+def update_poll(
+    *, poll: Poll, user: User, question: str, description: str = "", category: str, options: list[str]
+) -> Poll:
+    """Edits an own poll that is still open and has no votes (the duration is not editable)."""
+    question, description, options = validate_poll_fields(
+        question=question, description=description, category=category, options=options
+    )
+    with transaction.atomic():
+        # Voting locks the same row, so a vote cannot land halfway through an edit.
+        poll = Poll.objects.select_for_update().get(pk=poll.pk)
+        if poll.author_id != user.pk:
+            raise NotOwnerError("Bu anketi yalnızca sahibi düzenleyebilir.")
+        if not poll.is_open:
+            raise PollNotEditableError("Sona ermiş anketler düzenlenemez.")
+        if Vote.objects.filter(poll=poll).exists():
+            raise PollNotEditableError("Oy almış anketler düzenlenemez; oylar anlamını yitirmesin.")
+
+        poll.question = question
+        poll.description = description
+        poll.category = category
+        poll.save(update_fields=["question", "description", "category"])
+        poll.options.all().delete()
         Option.objects.bulk_create(
             [Option(poll=poll, label=label, position=index) for index, label in enumerate(options)]
         )

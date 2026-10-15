@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Anketlerim — KararVeremedim{% endblock %}
+
+{% block content %}
+<header class="profile-head">
+  <h1 class="profile-head__name">Anketlerim</h1>
+  <p class="muted">
+    {{ page.paginator.count }} anket · Oy almamış açık anketleri düzenleyebilir, istediğini bitirebilir ya da silebilirsin.
+  </p>
+</header>
+
+<div id="poll-list">
+  {% include "partials/_poll_list.html" %}
+</div>
+{% endblock %}

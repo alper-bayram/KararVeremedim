@@ -67,7 +67,7 @@ Tercih: **2. seçenek** (kodda kalıcı ve görünür olduğu için).
 | Akışı ve anketleri görmek | ✅ | ✅ |
 | Oy vermek | ✅ | ✅ |
 | Anket oluşturmak | ❌ (kayıt/giriş sayfasına yönlendirilir) | ✅ |
-| Kendi anketini kapatmak / silmek | — | ✅ |
+| Kendi anketini düzenlemek (oy almadıysa) / kapatmak / silmek | — | ✅ |
 
 ### 3.1 Kayıt
 Kayıt formu alanları:
@@ -78,7 +78,7 @@ Kayıt formu alanları:
 Kayıttan sonra kullanıcı otomatik olarak giriş yapmış olur ve geldiği sayfaya (`next`) veya ana sayfaya yönlendirilir.
 
 ### 3.2 Giriş / Çıkış
-- Giriş **e-posta + parola** ile yapılır.
+- Giriş **e-posta veya kullanıcı adı + parola** ile yapılır (kayıt hâlâ e-posta, kullanıcı adı ve parola ister).
 - Çıkış `POST` isteği ile yapılır (Django gereksinimi).
 - Parola sıfırlama prototipte **yok** (e-posta gönderimi gerektirir; sonraki sürüme bırakıldı).
 
@@ -104,7 +104,7 @@ Kayıttan sonra kullanıcı otomatik olarak giriş yapmış olur ve geldiği say
 | Seçenekler | **En az 2, en fazla 5**; her biri 1–80 karakter; aynı anket içinde tekrar edemez (boşluklar kırpılıp küçük harfle karşılaştırılır) |
 | Süre | 1 saat, 6 saat, 24 saat (varsayılan), 3 gün, 7 gün |
 
-- Anket oluşturulduktan sonra **düzenlenemez**.
+- Anket oluşturulduktan sonra yalnızca **henüz hiç oy almamış açık anketler** düzenlenebilir (soru, açıklama, kategori ve seçenekler; süre değişmez). İlk oydan sonra anket kilitlenir.
 - Anket sahibi anketini **erken kapatabilir** veya **silebilir**.
 - Süresi dolan anket otomatik olarak kapalı sayılır (`expires_at` geçmişse). Bunun için zamanlanmış görev gerekmez; durum her istekte hesaplanır.
 - Bir kullanıcı günde en fazla **10 anket** açabilir.
@@ -216,6 +216,8 @@ class Vote(models.Model):
 | `/` | Ana akış | Herkes |
 | `/anket/<uuid>/` | Anket detayı, oy verme, sonuçlar | Herkes |
 | `/anket/yeni/` | Anket oluşturma | Üye (`login_required`) |
+| `/anketlerim/` | Kendi anketlerim: düzenle / bitir / sil | Üye |
+| `/anket/<uuid>/duzenle/` | Anketi düzenle (yalnızca oy almamış açık anket) | Sahibi |
 | `/anket/<uuid>/oy/` | Oy verme (POST, JSON veya yönlendirme döner) | Herkes |
 | `/anket/<uuid>/kapat/` | Anketi kapat (POST) | Sahibi |
 | `/anket/<uuid>/sil/` | Anketi sil (POST) | Sahibi |
@@ -223,6 +225,7 @@ class Vote(models.Model):
 | `/kayit/` | Kayıt | Misafir |
 | `/giris/` | Giriş | Misafir |
 | `/cikis/` | Çıkış (POST) | Üye |
+| `/parola-sifirla/` | Parolamı unuttum (yalnızca e-posta alır, işlem yapmaz; `PASSWORD_RESET_PAGE_ENABLED` kapalıyken 404) | Misafir |
 | `/admin/` | Django admin (moderasyon) | Süper kullanıcı |
 
 ### 6.1 Ana Akış (`/`)
@@ -494,7 +497,7 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 > Not: İstenirse Faz 5, Faz 1'den hemen sonra da yapılabilir. Erken deploy, Vercel'e özgü sorunları erkenden yakalar.
 
 ### Sonraki Sürümler İçin Fikirler (prototip dışı)
-- Parola sıfırlama (e-posta gönderimi)
+- Parola sıfırlama (e-posta gönderimi; sayfa iskeleti hazır, bkz. Açık Kararlar)
 - Misafir oylarında kötüye kullanımı azaltmak için IP bazlı hız sınırı
 - Anketlere yorum
 - "Kararımı verdim: X'i seçtim 🎯" güncellemesi
@@ -559,3 +562,9 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - Onay penceresi (JS `confirm`) bitir/sil formlarında kullanılır; JS kapalıysa onay sorulmadan gönderilir (prototip için kabul edildi).
 - Hata sayfaları: `404.html` ve `403.html` site düzenini kullanır; `500.html` bağımsızdır (Django 500'de şablon bağlamı vermez).
 - Erişilebilirlik: "İçeriğe geç" bağlantısı, `<main id="main">`, `:focus-visible`, `aria-live` mesajlar ve oy butonlarında `aria-pressed`. Paylaşım: `navigator.share` varsa paylaşım menüsü, yoksa panoya kopyalama.
+- **Düzenleme kuralı değişti:** Önceki "oluşturulduktan sonra düzenlenemez" kuralı gevşetildi. Yalnızca açık ve hiç oy almamış anketler düzenlenebilir; oy gelince anket kilitlenir (sonuçlar anlamını yitirmesin). Düzenleme sırasında oy gelirse kayıt reddedilir (oylama ile aynı satır kilidi kullanılır). Süre düzenlenemez.
+- **Anketlerim:** Üst bardaki `@kullaniciadi` menüsünden (Anketlerim / Profilim / Çıkış) açılır. Sahibi buradan düzenle (uygunsa), bitir ve sil işlemlerini yapar; işlem sonrası aynı sayfaya döner (`next` yalnızca site içi adreslerle kabul edilir).
+- **Ana sayfada silme:** Kendi anketinin kartında sahibine "Sil" düğmesi görünür (onaylı); silince aynı filtreli ana sayfaya dönülür. Düzenle ve Bitir yalnızca Anketlerim ve detay sayfasındadır.
+- **Parolamı unuttum sayfası şimdilik kapalı:** `/parola-sifirla/` yalnızca e-posta adresini alır ve bekleme notu gösterir; hiçbir şey kaydedilmez, e-posta gönderilmez, yanıt kayıtlı/kayıtsız adreslerde aynıdır. `PASSWORD_RESET_PAGE_ENABLED` ortam değişkeni açılana kadar sayfa 404 verir ve giriş sayfasında bağlantı görünmez. Canlıda bu değişken tanımlı değildir, yani özellik yayında değildir.
+- **Demo verisi:** `python manage.py seed_demo` 10 kullanıcı (`demo_*`, `@example.com`), 30 anket (8 kategori, 2-5 seçenek) ve bu kullanıcıların oylarını ekler. Hedef veritabanını gösterir ve "evet" yazılmadan çalışmaz; parolalar rastgele üretilir, ekrana basılır ve git'e girmeyen `seed_credentials.txt` dosyasına yazılır. `--purge` demo kullanıcıları (anket ve oylarıyla) siler. Komut yalnızca bu proje deposundan, operatör onayıyla çalıştırılır.
+- **Giriş kimliği:** Giriş alanı e-posta ya da kullanıcı adı kabul eder (`accounts.backends.EmailOrUsernameBackend`). İkisi de küçük harfle saklandığı için arama büyük/küçük harf duyarsızdır; kullanıcı adı `@` içeremediğinden iki kimlik birbirine karışmaz. Hata mesajı hesabın var olup olmadığını belli etmez. Kayıt formu ve benzersizlik kuralları değişmedi.

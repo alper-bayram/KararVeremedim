@@ -19,4 +19,5 @@ urlpatterns = [
     ),
     # LogoutView only accepts POST (the header renders a small form).
     path("cikis/", auth_views.LogoutView.as_view(), name="logout"),
+    path("parola-sifirla/", views.password_reset_request, name="password_reset"),
 ]

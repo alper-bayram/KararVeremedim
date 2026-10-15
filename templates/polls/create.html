@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Yeni anket — KararVeremedim{% endblock %}
+{% block title %}{% if editing_poll %}Anketi düzenle{% else %}Yeni anket{% endif %} — KararVeremedim{% endblock %}
 {% block fab %}{% endblock %}
 
 {% block content %}
 <section class="card create-card">
-  <h1 class="auth-card__title">Kararsız mısın? Sor 🤔</h1>
-  <p class="muted">Soruyu yaz, 2-5 seçenek ekle; herkes oy versin.</p>
+  {% if editing_poll %}
+    <h1 class="auth-card__title">Anketi düzenle ✏️</h1>
+    <p class="muted">Henüz kimse oy vermediği için düzenleyebilirsin. İlk oydan sonra anket kilitlenir. Süre değişmez.</p>
+  {% else %}
+    <h1 class="auth-card__title">Kararsız mısın? Sor 🤔</h1>
+    <p class="muted">Soruyu yaz, 2-5 seçenek ekle; herkes oy versin.</p>
+  {% endif %}
 
   <form method="post" novalidate autocomplete="off" data-poll-form>
     {% csrf_token %}
@@ -47,17 +52,22 @@
       <button type="button" class="btn btn--soft btn--sm" data-add-option hidden>+ Seçenek ekle</button>
     </fieldset>
 
-    <fieldset class="field fieldset">
-      <legend class="field__label">Süre</legend>
-      <div class="segmented">
-        {% for radio in form.duration %}
-          <label class="segmented__item">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
-        {% endfor %}
-      </div>
-      {% for error in form.duration.errors %}<p class="field__error" role="alert">{{ error }}</p>{% endfor %}
-    </fieldset>
+    {% if not editing_poll %}
+      <fieldset class="field fieldset">
+        <legend class="field__label">Süre</legend>
+        <div class="segmented">
+          {% for radio in form.duration %}
+            <label class="segmented__item">{{ radio.tag }}<span>{{ radio.choice_label }}</span></label>
+          {% endfor %}
+        </div>
+        {% for error in form.duration.errors %}<p class="field__error" role="alert">{{ error }}</p>{% endfor %}
+      </fieldset>
+    {% endif %}
 
-    <button type="submit" class="btn btn--primary btn--block">Anketi yayınla</button>
+    <button type="submit" class="btn btn--primary btn--block">{% if editing_poll %}Değişiklikleri kaydet{% else %}Anketi yayınla{% endif %}</button>
+    {% if editing_poll %}
+      <p class="auth-card__alt"><a href="{% url 'polls:detail' editing_poll.pk %}">Vazgeç</a></p>
+    {% endif %}
   </form>
 </section>
 {% endblock %}

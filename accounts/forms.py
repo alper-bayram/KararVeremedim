@@ -94,10 +94,18 @@ class RegisterForm(forms.Form):
 
 
 class LoginForm(AuthenticationForm):
-    username = forms.EmailField(
-        label="E-posta",
-        widget=forms.EmailInput(
-            attrs={"class": "field__input", "autocomplete": "email", "autofocus": True}
+    # Accepts an e-mail address or a username; accounts.backends.EmailOrUsernameBackend resolves it.
+    username = forms.CharField(
+        label="E-posta veya kullanıcı adı",
+        widget=forms.TextInput(
+            attrs={
+                "class": "field__input",
+                "autocomplete": "username",
+                "autocapitalize": "none",
+                "autocorrect": "off",
+                "spellcheck": "false",
+                "autofocus": True,
+            }
         ),
     )
     password = forms.CharField(
@@ -109,6 +117,22 @@ class LoginForm(AuthenticationForm):
     )
 
     error_messages = {
-        "invalid_login": "E-posta veya parola hatalı.",
+        "invalid_login": "E-posta/kullanıcı adı veya parola hatalı.",
         "inactive": "Bu hesap pasif durumda.",
     }
+
+
+class PasswordResetRequestForm(forms.Form):
+    """Collects the e-mail address of the account to recover. Nothing is processed yet."""
+
+    email = LowercaseEmailField(
+        label="E-posta",
+        max_length=254,
+        error_messages={
+            "required": "E-posta adresini yazmalısın.",
+            "invalid": "Geçerli bir e-posta adresi gir.",
+        },
+        widget=forms.EmailInput(
+            attrs={"class": "field__input", "autocomplete": "email", "autofocus": True}
+        ),
+    )

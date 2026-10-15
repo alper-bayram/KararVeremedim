@@ -1,5 +1,7 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 User = get_user_model()
@@ -118,14 +120,63 @@ class LoginLogoutTests(TestCase):
         self.assertRedirects(response, "/")
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.pk)
 
-    def test_login_with_username_is_not_possible(self):
+    def test_login_with_username_is_possible(self):
         response = self.client.post(self.login_url, {"username": "ali", "password": PASSWORD})
+        self.assertRedirects(response, "/")
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.pk)
+
+    def test_login_with_username_is_case_insensitive_and_trimmed(self):
+        response = self.client.post(self.login_url, {"username": "  ALI ", "password": PASSWORD})
+        self.assertRedirects(response, "/")
+
+    def test_username_login_honours_next(self):
+        response = self.client.post(
+            self.login_url, {"username": "ali", "password": PASSWORD, "next": "/anket/yeni/"}
+        )
+        self.assertRedirects(response, "/anket/yeni/", fetch_redirect_response=False)
+
+    def test_wrong_password_fails_for_both_identifiers(self):
+        for identifier in ("ali", "ali@example.com"):
+            with self.subTest(identifier=identifier):
+                response = self.client.post(self.login_url, {"username": identifier, "password": "yanlis-1"})
+                self.assertContains(response, "E-posta/kullanıcı adı veya parola hatalı.")
+                self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_error_is_the_same_for_unknown_and_known_accounts(self):
+        known = self.client.post(self.login_url, {"username": "ali", "password": "yanlis-1"})
+        unknown = self.client.post(self.login_url, {"username": "yok_boyle_biri", "password": "yanlis-1"})
+        self.assertContains(known, "E-posta/kullanıcı adı veya parola hatalı.")
+        self.assertContains(unknown, "E-posta/kullanıcı adı veya parola hatalı.")
+
+    def test_inactive_user_cannot_log_in_with_either_identifier(self):
+        User.objects.filter(pk=self.user.pk).update(is_active=False)
+        for identifier in ("ali", "ali@example.com"):
+            with self.subTest(identifier=identifier):
+                response = self.client.post(self.login_url, {"username": identifier, "password": PASSWORD})
+                self.assertEqual(response.status_code, 200)
+                self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_identifiers_do_not_cross_over(self):
+        # Another user's username must not log in as someone whose e-mail merely starts the same way.
+        make_user(email="baska@example.com", username="baska")
+        response = self.client.post(self.login_url, {"username": "ali@example", "password": PASSWORD})
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("_auth_user_id", self.client.session)
 
+    def test_login_page_label_mentions_both(self):
+        self.assertContains(self.client.get(self.login_url), "E-posta veya kullanıcı adı")
+
+    def test_admin_login_accepts_username_for_staff(self):
+        staff = User.objects.create_superuser(
+            username="yonetici", email="yonetici@example.com", password=PASSWORD
+        )
+        self.assertTrue(self.client.login(username="yonetici", password=PASSWORD))
+        self.assertEqual(self.client.get(reverse("admin:index")).status_code, 200)
+        self.assertEqual(staff.username, "yonetici")
+
     def test_wrong_password_shows_error(self):
         response = self.client.post(self.login_url, {"username": "ali@example.com", "password": "yanlis"})
-        self.assertContains(response, "E-posta veya parola hatalı.")
+        self.assertContains(response, "E-posta/kullanıcı adı veya parola hatalı.")
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_login_redirects_to_next(self):
@@ -215,3 +266,55 @@ class AdminTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertTrue(User.objects.filter(email="yeni@example.com", username="yeni").exists())
+
+
+class PasswordResetPageTests(TestCase):
+    """The page exists but stays hidden (404) until PASSWORD_RESET_PAGE_ENABLED is switched on."""
+
+    url = reverse("accounts:password_reset")
+
+    def test_page_is_hidden_by_default(self):
+        self.assertFalse(settings.PASSWORD_RESET_PAGE_ENABLED)
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+        self.assertEqual(self.client.post(self.url, {"email": "a@example.com"}).status_code, 404)
+
+    def test_login_page_has_no_link_while_disabled(self):
+        self.assertNotContains(self.client.get(reverse("accounts:login")), "Parolamı unuttum")
+
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=True)
+    def test_enabled_page_and_login_link(self):
+        self.assertContains(self.client.get(self.url), "Parolanı mı unuttun?")
+        self.assertContains(self.client.get(reverse("accounts:login")), "Parolamı unuttum")
+
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=True)
+    def test_submission_only_shows_a_waiting_notice(self):
+        make_user(email="ali@example.com", username="ali")
+        response = self.client.post(self.url, {"email": "ali@example.com"})
+        self.assertContains(response, "Talebini aldık")
+        self.assertContains(response, "henüz etkin değil")
+        self.assertEqual(mail.outbox, [])
+
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=True)
+    def test_answer_is_the_same_for_unknown_addresses(self):
+        make_user(email="ali@example.com", username="ali")
+        known = self.client.post(self.url, {"email": "ali@example.com"}).content.decode()
+        unknown = self.client.post(self.url, {"email": "yok@example.com"}).content.decode()
+
+        def without_csrf(html):
+            return "".join(line for line in html.splitlines() if "csrf" not in line.lower())
+
+        self.assertEqual(without_csrf(known), without_csrf(unknown))
+
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=True)
+    def test_invalid_email_is_rejected_with_a_message(self):
+        response = self.client.post(self.url, {"email": "bu-bir-eposta-degil"})
+        self.assertContains(response, "Geçerli bir e-posta adresi gir.")
+        self.assertNotContains(response, "Talebini aldık")
+        response = self.client.post(self.url, {"email": ""})
+        self.assertContains(response, "E-posta adresini yazmalısın.")
+
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=True)
+    def test_nothing_is_stored(self):
+        before = User.objects.count()
+        self.client.post(self.url, {"email": "yeni@example.com"})
+        self.assertEqual(User.objects.count(), before)
