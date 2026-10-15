@@ -24,3 +24,7 @@ staticfiles/
 
 # Demo accounts written by `manage.py seed_demo`
 seed_credentials*.txt
+
+# Local-only agent instruction files (kept out of the repository)
+CLAUDE.md
+CLAUDE.local.md
