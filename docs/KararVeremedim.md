@@ -491,7 +491,7 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - [x] Supabase pooler bağlantısı (bölüm 2.1)
 - [x] Vercel ortam değişkenleri
 - [x] Migration'ların üretim veritabanına uygulanması
-- [ ] Süper kullanıcı oluşturulması (`createsuperuser`, yerelden Supabase'e bağlıyken)
+- [x] Süper kullanıcı oluşturulması (`createsuperuser`, yerelden Supabase'e bağlıyken)
 - [ ] Canlı ortamda uçtan uca elle test: kayıt → anket oluştur → başka tarayıcıdan misafir olarak oy ver (anket ve oylama Faz 2-3'te gelecek; kayıt/giriş şimdi denenebilir)
 
 > Not: İstenirse Faz 5, Faz 1'den hemen sonra da yapılabilir. Erken deploy, Vercel'e özgü sorunları erkenden yakalar.
@@ -565,6 +565,6 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - **Düzenleme kuralı değişti:** Önceki "oluşturulduktan sonra düzenlenemez" kuralı gevşetildi. Yalnızca açık ve hiç oy almamış anketler düzenlenebilir; oy gelince anket kilitlenir (sonuçlar anlamını yitirmesin). Düzenleme sırasında oy gelirse kayıt reddedilir (oylama ile aynı satır kilidi kullanılır). Süre düzenlenemez.
 - **Anketlerim:** Üst bardaki `@kullaniciadi` menüsünden (Anketlerim / Profilim / Çıkış) açılır. Sahibi buradan düzenle (uygunsa), bitir ve sil işlemlerini yapar; işlem sonrası aynı sayfaya döner (`next` yalnızca site içi adreslerle kabul edilir).
 - **Ana sayfada silme:** Kendi anketinin kartında sahibine "Sil" düğmesi görünür (onaylı); silince aynı filtreli ana sayfaya dönülür. Düzenle ve Bitir yalnızca Anketlerim ve detay sayfasındadır.
-- **Parolamı unuttum sayfası şimdilik kapalı:** `/parola-sifirla/` yalnızca e-posta adresini alır ve bekleme notu gösterir; hiçbir şey kaydedilmez, e-posta gönderilmez, yanıt kayıtlı/kayıtsız adreslerde aynıdır. `PASSWORD_RESET_PAGE_ENABLED` ortam değişkeni açılana kadar sayfa 404 verir ve giriş sayfasında bağlantı görünmez. Canlıda bu değişken tanımlı değildir, yani özellik yayında değildir.
+- **Parolamı unuttum sayfası hazır, ama işlem yapmaz:** `/parola-sifirla/` yalnızca e-posta adresini alır ve "özellik henüz etkin değil" notunu gösterir; hiçbir şey kaydedilmez, e-posta gönderilmez, yanıt kayıtlı/kayıtsız adreslerde aynıdır. Sayfa `PASSWORD_RESET_PAGE_ENABLED` ortam değişkeniyle açılır/kapanır (kapalıyken 404 verir ve giriş sayfasında bağlantı görünmez). **Canlıda 2026-10-15'ten beri açıktır** (Vercel: Production + Preview). Gerçek sıfırlama (e-posta gönderimi, token, yeni parola formu) yazılmadı.
 - **Demo verisi:** `python manage.py seed_demo` 10 kullanıcı (`demo_*`, `@example.com`), 30 anket (8 kategori, 2-5 seçenek) ve bu kullanıcıların oylarını ekler. Hedef veritabanını gösterir ve "evet" yazılmadan çalışmaz; parolalar rastgele üretilir, ekrana basılır ve git'e girmeyen `seed_credentials.txt` dosyasına yazılır. `--purge` demo kullanıcıları (anket ve oylarıyla) siler. Komut yalnızca bu proje deposundan, operatör onayıyla çalıştırılır.
 - **Giriş kimliği:** Giriş alanı e-posta ya da kullanıcı adı kabul eder (`accounts.backends.EmailOrUsernameBackend`). İkisi de küçük harfle saklandığı için arama büyük/küçük harf duyarsızdır; kullanıcı adı `@` içeremediğinden iki kimlik birbirine karışmaz. Hata mesajı hesabın var olup olmadığını belli etmez. Kayıt formu ve benzersizlik kuralları değişmedi.

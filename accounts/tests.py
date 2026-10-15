@@ -269,17 +269,33 @@ class AdminTests(TestCase):
 
 
 class PasswordResetPageTests(TestCase):
-    """The page exists but stays hidden (404) until PASSWORD_RESET_PAGE_ENABLED is switched on."""
+    """The page is inert and hidden (404) unless PASSWORD_RESET_PAGE_ENABLED is on.
+
+    Every test pins the flag explicitly so results do not depend on the developer's `.env`.
+    """
 
     url = reverse("accounts:password_reset")
 
-    def test_page_is_hidden_by_default(self):
-        self.assertFalse(settings.PASSWORD_RESET_PAGE_ENABLED)
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=False)
+    def test_page_is_hidden_while_the_flag_is_off(self):
         self.assertEqual(self.client.get(self.url).status_code, 404)
         self.assertEqual(self.client.post(self.url, {"email": "a@example.com"}).status_code, 404)
 
+    @override_settings(PASSWORD_RESET_PAGE_ENABLED=False)
     def test_login_page_has_no_link_while_disabled(self):
         self.assertNotContains(self.client.get(reverse("accounts:login")), "Parolamı unuttum")
+
+    def test_env_flag_helper_is_off_unless_explicitly_enabled(self):
+        import os
+        from unittest import mock
+
+        from config.settings import env_flag
+
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(env_flag("PASSWORD_RESET_PAGE_ENABLED"))  # missing -> off
+        for value, expected in [("True", True), ("1", True), ("yes", True), ("False", False), ("0", False), ("", False)]:
+            with self.subTest(value=value), mock.patch.dict(os.environ, {"PASSWORD_RESET_PAGE_ENABLED": value}):
+                self.assertEqual(env_flag("PASSWORD_RESET_PAGE_ENABLED"), expected)
 
     @override_settings(PASSWORD_RESET_PAGE_ENABLED=True)
     def test_enabled_page_and_login_link(self):
