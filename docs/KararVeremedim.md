@@ -492,7 +492,7 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - [x] Vercel ortam değişkenleri
 - [x] Migration'ların üretim veritabanına uygulanması
 - [x] Süper kullanıcı oluşturulması (`createsuperuser`, yerelden Supabase'e bağlıyken)
-- [ ] Canlı ortamda uçtan uca elle test: kayıt → anket oluştur → başka tarayıcıdan misafir olarak oy ver (anket ve oylama Faz 2-3'te gelecek; kayıt/giriş şimdi denenebilir)
+- [x] Canlı ortamda uçtan uca elle test: kayıt → anket oluştur → başka tarayıcıdan misafir olarak oy ver (2026-10-15'te yapıldı)
 
 > Not: İstenirse Faz 5, Faz 1'den hemen sonra da yapılabilir. Erken deploy, Vercel'e özgü sorunları erkenden yakalar.
 
@@ -568,3 +568,4 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - **Parolamı unuttum sayfası hazır, ama işlem yapmaz:** `/parola-sifirla/` yalnızca e-posta adresini alır ve "özellik henüz etkin değil" notunu gösterir; hiçbir şey kaydedilmez, e-posta gönderilmez, yanıt kayıtlı/kayıtsız adreslerde aynıdır. Sayfa `PASSWORD_RESET_PAGE_ENABLED` ortam değişkeniyle açılır/kapanır (kapalıyken 404 verir ve giriş sayfasında bağlantı görünmez). **Canlıda 2026-10-15'ten beri açıktır** (Vercel: Production + Preview). Gerçek sıfırlama (e-posta gönderimi, token, yeni parola formu) yazılmadı.
 - **Demo verisi:** `python manage.py seed_demo` 10 kullanıcı (`demo_*`, `@example.com`), 30 anket (8 kategori, 2-5 seçenek) ve bu kullanıcıların oylarını ekler. Hedef veritabanını gösterir ve "evet" yazılmadan çalışmaz; parolalar rastgele üretilir, ekrana basılır ve git'e girmeyen `seed_credentials.txt` dosyasına yazılır. `--purge` demo kullanıcıları (anket ve oylarıyla) siler. Komut yalnızca bu proje deposundan, operatör onayıyla çalıştırılır.
 - **Giriş kimliği:** Giriş alanı e-posta ya da kullanıcı adı kabul eder (`accounts.backends.EmailOrUsernameBackend`). İkisi de küçük harfle saklandığı için arama büyük/küçük harf duyarsızdır; kullanıcı adı `@` içeremediğinden iki kimlik birbirine karışmaz. Hata mesajı hesabın var olup olmadığını belli etmez. Kayıt formu ve benzersizlik kuralları değişmedi.
+- **Proje durumu:** Prototip kapsamı tamamlandı (Faz 0-5, tüm kutucuklar işaretli). Bu bir deneme projesidir; "Sonraki Sürümler İçin Fikirler" ve CLAUDE.md'deki sınırlamalar bilinçli olarak yapılmadan bırakılmıştır.
