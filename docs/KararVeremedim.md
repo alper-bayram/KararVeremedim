@@ -475,12 +475,12 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - [x] Bölüm 11'deki oylama testleri
 
 ### Faz 4 — Anket Yönetimi ve Cilalama
-- [ ] Anketi erken bitirme ve silme (yalnızca sahibi)
-- [ ] Kalan süre / "Bitti" etiketleri, "Bitenleri de göster" filtresi
-- [ ] Linki kopyala / paylaş butonu
-- [ ] Boş durumlar, 404 ve 500 sayfaları (tasarıma uygun)
-- [ ] Mobil görünüm ve erişilebilirlik kontrolü
-- [ ] Sayfa başlıkları ve temel meta etiketleri (anket sorusu `<title>`'da)
+- [x] Anketi erken bitirme ve silme (yalnızca sahibi)
+- [x] Kalan süre / "Bitti" etiketleri, "Bitenleri de göster" filtresi
+- [x] Linki kopyala / paylaş butonu
+- [x] Boş durumlar, 404 ve 500 sayfaları (tasarıma uygun)
+- [x] Mobil görünüm ve erişilebilirlik kontrolü
+- [x] Sayfa başlıkları ve temel meta etiketleri (anket sorusu `<title>`'da)
 
 ### Faz 5 — Yayın (Vercel)
 - [x] Üretim ayarları (`DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, güvenli çerezler)
@@ -553,3 +553,9 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - Eşit oy alan seçeneklerin hepsi "önde" olarak vurgulanır.
 - Oy veren, anket açıkken kartta veya detayda "Oyumu değiştir" ile oyunu değiştirebilir; değiştirme formu `?degistir=1` ile açılır (JS gerekmez).
 - Misafir çerezi imzalıdır (`kv_voter`, HttpOnly, SameSite=Lax, 1 yıl). İmzası bozuk ya da UUID olmayan çerez yok sayılır ve yenisi verilir.
+- Silme kalıcıdır: anket, seçenekleri ve oyları birlikte silinir (geri alma yok). "Bitir" ise anketi ve oyları korur; sonuçlar herkese açılır, oy verilemez. Silme günlük 10 anket limitinde yer açar (limit son 24 saatte *mevcut* anketleri sayar).
+- Bitir/sil yalnızca anketin sahibine açıktır (başkası 403, misafir giriş sayfasına yönlenir). Admin paneli moderasyon için ayrıca kullanılır; ana sitede admine özel düğme yoktur.
+- "Bitenleri de göster" yalnızca **Yeni** sekmesinde geçerlidir (`?bitenler=1`); Popüler, spesifikasyondaki gibi açık anketlerle sınırlı kalır. Kategori ve sayfalama bağlantıları filtreyi korur.
+- Onay penceresi (JS `confirm`) bitir/sil formlarında kullanılır; JS kapalıysa onay sorulmadan gönderilir (prototip için kabul edildi).
+- Hata sayfaları: `404.html` ve `403.html` site düzenini kullanır; `500.html` bağımsızdır (Django 500'de şablon bağlamı vermez).
+- Erişilebilirlik: "İçeriğe geç" bağlantısı, `<main id="main">`, `:focus-visible`, `aria-live` mesajlar ve oy butonlarında `aria-pressed`. Paylaşım: `navigator.share` varsa paylaşım menüsü, yoksa panoya kopyalama.

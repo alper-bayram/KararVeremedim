@@ -4,8 +4,16 @@
   {% if page.number == 1 %}
     <div class="empty">
       <p class="empty__emoji" aria-hidden="true">🦗</p>
-      <p>Burası çok sessiz 🦗 İlk kararsızlığı sen paylaş!</p>
-      <a class="btn btn--primary" href="{{ create_poll_url }}">Anket oluştur</a>
+      {% if profile_user %}
+        <p>@{{ profile_user.username }} henüz anket açmamış.</p>
+      {% elif has_filter %}
+        <p>Bu kategoride şimdilik anket yok 🦗 İlk soruyu sen sor!</p>
+      {% else %}
+        <p>Burası çok sessiz 🦗 İlk kararsızlığı sen paylaş!</p>
+      {% endif %}
+      {% if not profile_user or profile_user == user %}
+        <a class="btn btn--primary" href="{{ create_poll_url }}">Anket oluştur</a>
+      {% endif %}
     </div>
   {% endif %}
 {% endfor %}

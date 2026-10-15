@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}KararVeremedim{% endblock %}</title>
   <meta name="description" content="{% block meta_description %}Kararsız mı kaldın? Anket aç, herkese danış.{% endblock %}">
+  <meta name="theme-color" content="#7B2FF7">
+  <meta property="og:site_name" content="KararVeremedim">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:title" content="{% block og_title %}KararVeremedim — Kararsız mısın? Danış!{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Kararsız mı kaldın? Anket aç, herkese danış.{% endblock %}">
+  <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
@@ -12,8 +19,9 @@
   <script src="{% static 'js/main.js' %}" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main">İçeriğe geç</a>
   {% include "partials/_header.html" %}
-  <main class="container">
+  <main id="main" class="container" tabindex="-1">
     {% include "partials/_messages.html" %}
     {% block content %}{% endblock %}
   </main>

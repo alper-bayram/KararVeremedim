@@ -43,6 +43,12 @@ class DailyLimitError(PollError):
     pass
 
 
+class NotOwnerError(PollError):
+    """Only the author may close or delete a poll."""
+
+    status_code = 403
+
+
 class VoteError(PollError):
     """Base class for voting rule violations; `status_code` is the HTTP status the endpoint uses."""
 
@@ -197,3 +203,28 @@ def build_results(poll: Poll, counts: dict[int, int], my_option_id: int | None =
 
 def get_results(poll: Poll, *, my_option_id: int | None = None) -> dict:
     return build_results(poll, option_vote_counts([poll.pk]), my_option_id)
+
+
+# --- Poll management (owner only) -------------------------------------------
+
+
+def close_poll(*, poll: Poll, user: User) -> Poll:
+    """Ends a poll early. Results become visible to everyone and voting stops."""
+    with transaction.atomic():
+        poll = Poll.objects.select_for_update().get(pk=poll.pk)
+        if poll.author_id != user.pk:
+            raise NotOwnerError("Bu anketi yalnızca sahibi bitirebilir.")
+        if not poll.is_open:
+            raise PollClosedError("Bu anket zaten sona ermiş.")
+        poll.closed_at = timezone.now()
+        poll.save(update_fields=["closed_at"])
+    return poll
+
+
+def delete_poll(*, poll: Poll, user: User) -> None:
+    """Permanently deletes a poll together with its options and votes."""
+    with transaction.atomic():
+        poll = Poll.objects.select_for_update().get(pk=poll.pk)
+        if poll.author_id != user.pk:
+            raise NotOwnerError("Bu anketi yalnızca sahibi silebilir.")
+        poll.delete()

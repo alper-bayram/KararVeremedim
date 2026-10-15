@@ -21,6 +21,12 @@
   {% endfor %}
 </div>
 
+{% if sort == 'yeni' %}
+  <p class="feed-toggle">
+    <a class="muted-link" href="{{ finished_toggle_url }}">{% if show_finished %}Sadece açık anketleri göster{% else %}Bitenleri de göster{% endif %}</a>
+  </p>
+{% endif %}
+
 <div id="poll-list">
   {% include "partials/_poll_list.html" %}
 </div>

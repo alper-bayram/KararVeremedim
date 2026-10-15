@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Erişim yok — KararVeremedim{% endblock %}
+
+{% block content %}
+<div class="empty">
+  <p class="empty__emoji" aria-hidden="true">🚫</p>
+  <h1 class="empty__title">Buna iznin yok</h1>
+  <p class="muted">Bu işlemi yalnızca anketin sahibi yapabilir.</p>
+  <a class="btn btn--primary" href="{% url 'polls:feed' %}">Anketlere dön</a>
+</div>
+{% endblock %}

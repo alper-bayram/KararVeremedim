@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Sayfa bulunamadı — KararVeremedim{% endblock %}
+
+{% block content %}
+<div class="empty">
+  <p class="empty__emoji" aria-hidden="true">🤷</p>
+  <h1 class="empty__title">Bu sayfa kararını verip gitmiş</h1>
+  <p class="muted">Aradığın sayfa yok ya da silinmiş olabilir.</p>
+  <a class="btn btn--primary" href="{% url 'polls:feed' %}">Anketlere dön</a>
+</div>
+{% endblock %}

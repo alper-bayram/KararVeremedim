@@ -165,7 +165,7 @@ class ProfileTests(TestCase):
     def test_empty_profile_shows_friendly_message(self):
         response = self.client.get(reverse("polls:profile", args=["mehmet"]))
         self.assertContains(response, "0 anket")
-        self.assertContains(response, "Burası çok sessiz")
+        self.assertContains(response, "@mehmet henüz anket açmamış.")
 
 
 class AdminPollTests(TestCase):

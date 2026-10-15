@@ -2,7 +2,8 @@
 {% load poll_extras %}
 
 {% block title %}{{ poll.question }} — KararVeremedim{% endblock %}
-{% block meta_description %}{{ poll.question }} — KararVeremedim'de bu ankete katıl.{% endblock %}
+{% block meta_description %}{% if poll.description %}{{ poll.description|truncatechars:160 }}{% else %}{{ poll.question }} — KararVeremedim'de bu ankete katıl.{% endif %}{% endblock %}
+{% block og_title %}{{ poll.question }}{% endblock %}
 
 {% block content %}
 <article class="card poll-card poll-card--detail">
@@ -35,7 +36,28 @@
         <a class="btn btn--soft btn--sm" href="{% url 'polls:detail' poll.pk %}?degistir=1" data-change-vote>Oyumu değiştir</a>
       {% endif %}
     {% endif %}
+    <button type="button" class="btn btn--soft btn--sm" data-share hidden
+            data-share-url="{{ share_url }}" data-share-title="{{ poll.question }}">
+      <span data-share-label>Linki kopyala</span>
+    </button>
   </div>
+
+  {% if poll.is_owner %}
+    <div class="owner-actions">
+      {% if poll.is_open %}
+        <form method="post" action="{% url 'polls:close' poll.pk %}"
+              data-confirm="Anketi şimdi bitirmek istediğine emin misin? Oy verme kapanır ve sonuçlar herkese açılır.">
+          {% csrf_token %}
+          <button type="submit" class="btn btn--soft btn--sm">Anketi bitir</button>
+        </form>
+      {% endif %}
+      <form method="post" action="{% url 'polls:delete' poll.pk %}"
+            data-confirm="Bu anket ve tüm oyları kalıcı olarak silinecek. Emin misin?">
+        {% csrf_token %}
+        <button type="submit" class="btn btn--danger btn--sm">Sil</button>
+      </form>
+    </div>
+  {% endif %}
 </article>
 
 {% if poll.is_owner %}

@@ -214,9 +214,49 @@ function initVoting() {
   });
 }
 
+// Destructive forms (close/delete poll) ask for confirmation first.
+function initConfirmForms() {
+  document.addEventListener("submit", (event) => {
+    const message = event.target.dataset?.confirm;
+    if (message && !window.confirm(message)) event.preventDefault();
+  });
+}
+
+// "Linki kopyala": native share sheet when available, clipboard otherwise.
+function initShare() {
+  document.querySelectorAll("[data-share]").forEach((button) => {
+    button.hidden = false; // hidden in the HTML so it does not show up without JS
+    const label = button.querySelector("[data-share-label]");
+    const original = label.textContent;
+    const flash = (text) => {
+      label.textContent = text;
+      setTimeout(() => (label.textContent = original), 2000);
+    };
+    button.addEventListener("click", async () => {
+      const url = button.dataset.shareUrl;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: button.dataset.shareTitle, url });
+        } catch (error) {
+          // The user closed the share sheet; nothing to do.
+        }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        flash("Kopyalandı ✓");
+      } catch (error) {
+        window.prompt("Linki kopyala:", url);
+      }
+    });
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initDismissibleBanners();
   initLoadMore();
   initPollForm();
   initVoting();
+  initConfirmForms();
+  initShare();
 });

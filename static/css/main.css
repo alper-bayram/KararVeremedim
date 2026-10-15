@@ -387,6 +387,38 @@ main.container { padding-block: 20px 96px; }
 .profile-head__name { font-size: 1.6rem; }
 .profile-head .muted { margin: 4px 0 0; }
 
+.feed-toggle { margin: -8px 0 16px; font-size: 0.9rem; }
+.owner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.owner-actions form { margin: 0; }
+.btn--danger { background: var(--pink-tint); color: #B0124F; font-weight: 800; }
+.btn--danger:hover { background: var(--pink); color: #fff; }
+.poll-card__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.empty__title { font-size: 1.4rem; margin: 4px 0 8px; }
+.empty .muted { margin: 0 0 20px; }
+
+/* Keyboard users: jump past the header. Visible only on focus. */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -64px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--text);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}
+.skip-link:focus { top: 12px; }
+main:focus { outline: none; }
+
 /* ---------- 8b. Forms & auth pages ---------- */
 .auth-card { max-width: 440px; margin-inline: auto; padding: 28px 24px; }
 .auth-card__title { font-size: 1.5rem; margin-bottom: 4px; }

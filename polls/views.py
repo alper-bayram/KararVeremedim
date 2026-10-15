@@ -4,10 +4,12 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
@@ -20,7 +22,6 @@ User = get_user_model()
 
 PAGE_SIZE = 20
 SORT_NEW, SORT_POPULAR = "yeni", "populer"
-
 
 
 def _with_counts(queryset):
@@ -76,7 +77,7 @@ def _render_poll_list(request, queryset, *, template, context):
     page = Paginator(queryset, PAGE_SIZE).get_page(request.GET.get("sayfa"))
     page.object_list = list(page.object_list)  # same instances the template will iterate
     _attach_viewer_state(request, page.object_list)
-    params = {key: request.GET.get(key) for key in ("sirala", "kategori")}
+    params = {key: request.GET.get(key) for key in ("sirala", "kategori", "bitenler")}
     context = {
         **context,
         "page": page,
@@ -92,8 +93,12 @@ def feed(request):
     category = request.GET.get("kategori")
     if category not in Category.values:
         category = ""
+    # "Bitenleri de göster" only applies to the New tab: Popular is defined over open polls.
+    finished_requested = request.GET.get("bitenler") == "1"
+    show_finished = finished_requested and sort == SORT_NEW
+    finished = "1" if finished_requested else ""
 
-    polls = _with_counts(Poll.objects.open())
+    polls = _with_counts(Poll.objects.all() if show_finished else Poll.objects.open())
     if category:
         polls = polls.filter(category=category)
     if sort == SORT_POPULAR:
@@ -102,13 +107,14 @@ def feed(request):
             "-recent_votes", "-created_at"
         )
 
+    popular = SORT_POPULAR if sort == SORT_POPULAR else ""
     chips = [
         {
             "label": "Tümü",
             "emoji": "",
             "color": "violet",
             "active": not category,
-            "url": _url("/", sirala=sort if sort == SORT_POPULAR else ""),
+            "url": _url("/", sirala=popular, bitenler=finished),
         }
     ]
     for value, label in Category.choices:
@@ -118,7 +124,7 @@ def feed(request):
                 "emoji": CATEGORY_EMOJI[value],
                 "color": CATEGORY_COLOR[value],
                 "active": category == value,
-                "url": _url("/", sirala=sort if sort == SORT_POPULAR else "", kategori=value),
+                "url": _url("/", sirala=popular, kategori=value, bitenler=finished),
             }
         )
 
@@ -129,8 +135,10 @@ def feed(request):
         context={
             "sort": sort,
             "chips": chips,
-            "tab_new_url": _url("/", kategori=category),
-            "tab_popular_url": _url("/", sirala=SORT_POPULAR, kategori=category),
+            "tab_new_url": _url("/", kategori=category, bitenler=finished),
+            "tab_popular_url": _url("/", sirala=SORT_POPULAR, kategori=category, bitenler=finished),
+            "show_finished": show_finished,
+            "finished_toggle_url": _url("/", kategori=category, bitenler="" if finished_requested else "1"),
             "has_filter": bool(category),
         },
     )
@@ -179,7 +187,8 @@ def detail(request, pk):
     _attach_viewer_state(request, [poll])
     # "Oyumu değiştir": people who already voted may reopen the vote form.
     editing = bool(request.GET.get("degistir")) and poll.can_vote and poll.my_option_id is not None
-    return render(request, "polls/detail.html", {"poll": poll, "editing": editing})
+    share_url = request.build_absolute_uri(reverse("polls:detail", args=[poll.pk]))
+    return render(request, "polls/detail.html", {"poll": poll, "editing": editing, "share_url": share_url})
 
 
 @require_POST
@@ -231,3 +240,32 @@ def profile(request, username):
         template="polls/profile.html",
         context={"profile_user": profile_user, "poll_count": polls.count()},
     )
+
+
+@require_POST
+@login_required
+def close(request, pk):
+    """Ends the viewer's own poll early."""
+    poll = get_object_or_404(Poll, pk=pk)
+    try:
+        services.close_poll(poll=poll, user=request.user)
+    except services.NotOwnerError:
+        raise PermissionDenied from None
+    except services.PollClosedError as error:
+        messages.info(request, str(error))
+    else:
+        messages.success(request, "Anket bitirildi. Sonuçlar artık herkese açık.")
+    return redirect("polls:detail", pk=poll.pk)
+
+
+@require_POST
+@login_required
+def delete(request, pk):
+    """Permanently deletes the viewer's own poll."""
+    poll = get_object_or_404(Poll, pk=pk)
+    try:
+        services.delete_poll(poll=poll, user=request.user)
+    except services.NotOwnerError:
+        raise PermissionDenied from None
+    messages.success(request, "Anket silindi.")
+    return redirect("polls:profile", username=request.user.username)
