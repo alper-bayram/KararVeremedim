@@ -130,8 +130,93 @@ function initPollForm() {
   });
 }
 
+// Voting without a page reload. The form works as a plain POST without JS.
+function csrfToken(form) {
+  return form.querySelector("input[name=csrfmiddlewaretoken]")?.value || "";
+}
+
+function buildResults(results, myOptionId) {
+  const colors = ["violet", "pink", "orange", "mint", "sky"];
+  const top = Math.max(...results.map((r) => r.votes));
+  const list = document.createElement("ul");
+  list.className = "options";
+  list.dataset.results = "";
+  results.forEach((r, index) => {
+    const item = document.createElement("li");
+    const mine = r.id === myOptionId;
+    item.className =
+      "result result--" + colors[index % colors.length] + (mine ? " result--mine" : "") + (top > 0 && r.votes === top ? " result--leading" : "");
+    const bar = document.createElement("span");
+    bar.className = "result__bar";
+    bar.style.setProperty("--percent", r.percent + "%");
+    const label = document.createElement("span");
+    label.className = "result__label";
+    label.textContent = (mine ? "✓ " : "") + r.label; // textContent: user text is never parsed as HTML
+    const value = document.createElement("span");
+    value.className = "result__value";
+    value.textContent = r.percent + "% · " + r.votes;
+    item.append(bar, label, value);
+    list.append(item);
+  });
+  return list;
+}
+
+function initVoting() {
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-vote-form]");
+    if (!form) return;
+    const button = event.submitter;
+    if (!button || !button.name) return;
+    event.preventDefault();
+
+    const buttons = [...form.querySelectorAll("button")];
+    const errorBox = form.querySelector(".vote-error");
+    buttons.forEach((b) => (b.disabled = true));
+    errorBox.hidden = true;
+
+    try {
+      const body = new FormData();
+      body.set("option_id", button.value);
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken(form), Accept: "application/json" },
+        body,
+        credentials: "same-origin",
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        errorBox.textContent = data.error || "Oy kaydedilemedi.";
+        errorBox.hidden = false;
+        buttons.forEach((b) => (b.disabled = false));
+        return;
+      }
+
+      const card = form.closest(".poll-card");
+      form.replaceWith(buildResults(data.results, data.my_option_id));
+      const total = card.querySelector("[data-total-votes]");
+      if (total) total.textContent = data.total;
+      // Offer "Oyumu değiştir" (the change form lives on the detail page).
+      const slot = card.querySelector("[data-change-slot]");
+      if (slot && !slot.querySelector("[data-change-vote]")) {
+        const detailUrl = card.querySelector(".poll-card__link")?.href || window.location.pathname;
+        const link = document.createElement("a");
+        link.dataset.changeVote = "";
+        link.href = detailUrl + "?degistir=1";
+        link.textContent = "Oyumu değiştir";
+        link.className = card.classList.contains("poll-card--detail") ? "btn btn--soft btn--sm" : "muted-link";
+        slot.prepend(link);
+      }
+      slot?.querySelector("[data-cancel-change]")?.remove();
+      document.querySelector("[data-vote-hint]")?.remove();
+    } catch (error) {
+      form.submit(); // network or parsing problem: fall back to a normal form post
+    }
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initDismissibleBanners();
   initLoadMore();
   initPollForm();
+  initVoting();
 });

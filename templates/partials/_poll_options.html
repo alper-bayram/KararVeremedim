@@ -1,0 +1,38 @@
+{% comment %}
+Renders a poll's options for the current viewer: result bars when they may see
+results, otherwise the vote buttons (or plain options when voting is not possible).
+Expects `poll` annotated by views._attach_viewer_state. Set `editing` to reopen the vote form.
+{% endcomment %}
+{% if poll.show_results and not editing %}
+  <ul class="options" data-results>
+    {% for result in poll.results.options %}
+      <li class="result result--{{ result.color }}{% if result.is_mine %} result--mine{% endif %}{% if result.is_leading %} result--leading{% endif %}">
+        <span class="result__bar" style="--percent: {{ result.percent }}%"></span>
+        <span class="result__label">{% if result.is_mine %}✓ {% endif %}{{ result.label }}</span>
+        <span class="result__value">{{ result.percent }}% · {{ result.votes }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% elif poll.can_vote %}
+  <form method="post" action="{% url 'polls:vote' poll.pk %}" class="vote-form" data-vote-form>
+    {% csrf_token %}
+    <ul class="options">
+      {% for option in poll.options.all %}
+        <li>
+          <button type="submit" name="option_id" value="{{ option.pk }}"
+                  class="option option--{{ option.color }}{% if option.pk == poll.my_option_id %} option--current{% endif %}"
+                  {% if option.pk == poll.my_option_id %}aria-pressed="true"{% endif %}>
+            <span class="option__label">{% if option.pk == poll.my_option_id %}✓ {% endif %}{{ option.label }}</span>
+          </button>
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="vote-error" role="alert" hidden></p>
+  </form>
+{% else %}
+  <ul class="options">
+    {% for option in poll.options.all %}
+      <li class="option option--{{ option.color }} option--static">{{ option.label }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

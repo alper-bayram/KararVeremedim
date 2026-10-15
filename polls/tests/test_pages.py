@@ -86,7 +86,7 @@ class FeedTests(TestCase):
         make_poll(self.author)
         response = self.client.get("/")
         self.assertContains(response, "@ayse")
-        self.assertContains(response, "0 oy")
+        self.assertContains(response, "<span data-total-votes>0</span> oy")
         self.assertNotContains(response, "ayse.gizli")
 
     def test_invite_banner_only_for_guests(self):
@@ -106,12 +106,12 @@ class DetailTests(TestCase):
         self.assertContains(response, "Biraz bağlam ekliyorum.")
         self.assertContains(response, "Sinema")
         self.assertContains(response, "Restoran")
-        self.assertContains(response, "0 oy")
+        self.assertContains(response, "<span data-total-votes>0</span> oy")
 
     def test_detail_hides_percentages(self):
         Vote.objects.create(poll=self.poll, option=self.poll.options.first(), voter_key="a:1")
         response = self.client.get(reverse("polls:detail", args=[self.poll.pk]))
-        self.assertContains(response, "1 oy")
+        self.assertContains(response, "<span data-total-votes>1</span> oy")
         self.assertNotContains(response, "%")
 
     def test_detail_title_contains_question(self):

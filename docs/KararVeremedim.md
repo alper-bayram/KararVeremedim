@@ -467,12 +467,12 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - [x] Bölüm 11'deki anket testleri
 
 ### Faz 3 — Oylama ve Sonuçlar
-- [ ] `voter_key` mantığı (üye ID / imzalı misafir çerezi)
-- [ ] `services.cast_vote` + `/anket/<uuid>/oy/` endpoint'i (JSON + JS'siz form desteği)
-- [ ] Kartta ve detayda oy verme, oy değiştirme
-- [ ] Sonuç görünürlük kuralları (bölüm 4.2)
-- [ ] Animasyonlu sonuç çubukları, seçilen ve önde olan seçeneğin vurgulanması
-- [ ] Bölüm 11'deki oylama testleri
+- [x] `voter_key` mantığı (üye ID / imzalı misafir çerezi)
+- [x] `services.cast_vote` + `/anket/<uuid>/oy/` endpoint'i (JSON + JS'siz form desteği)
+- [x] Kartta ve detayda oy verme, oy değiştirme
+- [x] Sonuç görünürlük kuralları (bölüm 4.2)
+- [x] Animasyonlu sonuç çubukları, seçilen ve önde olan seçeneğin vurgulanması
+- [x] Bölüm 11'deki oylama testleri
 
 ### Faz 4 — Anket Yönetimi ve Cilalama
 - [ ] Anketi erken bitirme ve silme (yalnızca sahibi)
@@ -547,6 +547,9 @@ Her faz tek başına çalışan, test edilebilir bir sonuç üretir. Tamamlanan 
 - Vercel'in kendi adresinde HTTP→HTTPS yönlendirmesi ve HSTS (`strict-transport-security`) uçta uygulanır; Django'da `SECURE_SSL_REDIRECT` ve `SECURE_HSTS_SECONDS` ayrıca açılmadı (prototip).
 - "Günde en fazla 10 anket" kuralı kayan 24 saatlik pencereyle uygulanır (takvim günü değil): son 24 saatte açılan anketler sayılır.
 - Ana akış yalnızca açık anketleri listeler; "Bitenleri de göster" seçeneği Faz 4'te eklenecek. Profil sayfası kullanıcının tüm anketlerini (biten dahil) gösterir.
-- Anket detayında oy verme gelene kadar (Faz 3) "Oy verme çok yakında açılıyor" notu gösterilir; Faz 3'te kaldırılır.
 - "Anket oluştur" butonları ve FAB, misafirler için `/kayit/?next=/anket/yeni/` adresine gider (`polls.context_processors.create_poll_url`).
 - Aynı kullanıcının aynı soru ve seçeneklerle 10 dakika içinde tekrar gönderdiği anket yeni anket oluşturmaz; mevcut ankete yönlendirilir ("Bu anketi zaten yayınladın."). Geri tuşu / çift tıklama kaynaklı mükerrer anketleri önlemek içindir.
+- Yüzdeler "en büyük kalan" yöntemiyle tam sayıya yuvarlanır; böylece toplam her zaman tam 100 olur (oy varsa), oy yoksa hepsi 0'dır.
+- Eşit oy alan seçeneklerin hepsi "önde" olarak vurgulanır.
+- Oy veren, anket açıkken kartta veya detayda "Oyumu değiştir" ile oyunu değiştirebilir; değiştirme formu `?degistir=1` ile açılır (JS gerekmez).
+- Misafir çerezi imzalıdır (`kv_voter`, HttpOnly, SameSite=Lax, 1 yıl). İmzası bozuk ya da UUID olmayan çerez yok sayılır ve yenisi verilir.

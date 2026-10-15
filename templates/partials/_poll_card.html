@@ -10,17 +10,18 @@
   <h2 class="poll-card__question">
     <a class="poll-card__link" href="{% url 'polls:detail' poll.pk %}">{{ poll.question }}</a>
   </h2>
-  <ul class="options">
-    {% for option in poll.options.all %}
-      <li class="option option--{{ option.color }} option--static">{{ option.label }}</li>
-    {% endfor %}
-  </ul>
+  {% include "partials/_poll_options.html" %}
   <div class="poll-card__footer muted">
-    <span>{{ poll.total_votes }} oy</span>
-    {% if poll.is_open %}
-      <span class="badge badge--mint">{{ poll.expires_at|time_left }}</span>
-    {% else %}
-      <span class="badge badge--gray">Bitti</span>
-    {% endif %}
+    <span><span data-total-votes>{% if poll.show_results %}{{ poll.results.total }}{% else %}{{ poll.total_votes }}{% endif %}</span> oy</span>
+    <span class="poll-card__footer-end" data-change-slot>
+      {% if poll.my_option_id and poll.can_vote %}
+        <a class="muted-link" href="{% url 'polls:detail' poll.pk %}?degistir=1" data-change-vote>Oyumu değiştir</a>
+      {% endif %}
+      {% if poll.is_open %}
+        <span class="badge badge--mint">{{ poll.expires_at|time_left }}</span>
+      {% else %}
+        <span class="badge badge--gray">Bitti</span>
+      {% endif %}
+    </span>
   </div>
 </article>

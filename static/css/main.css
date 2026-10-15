@@ -265,7 +265,7 @@ main.container { padding-block: 20px 96px; }
   width: var(--percent, 0%);
   background: var(--c);
   opacity: 0.28;
-  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: bar-fill 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .result__label, .result__value { position: relative; }
 .result__value { font-weight: 800; white-space: nowrap; }
@@ -354,6 +354,17 @@ main.container { padding-block: 20px 96px; }
 .empty__emoji { margin: 0; font-size: 3rem; }
 
 /* ---------- 8a. Poll cards, lists, profile ---------- */
+.vote-form { margin: 0; }
+.vote-form .option:disabled { cursor: progress; opacity: 0.65; }
+/* The viewer's current choice while changing a vote. */
+.option--current { border-color: var(--c); }
+.vote-error { margin: 10px 0 0; color: #C2185B; font-weight: 600; font-size: 0.9rem; }
+.vote-error[hidden] { display: none; }
+.poll-card__footer-end { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.poll-card__actions { margin-top: 14px; }
+.poll-card__actions:empty { display: none; }
+.poll-card--detail .options { margin-bottom: 0; }
+
 .option--static {
   cursor: default;
   border-color: color-mix(in srgb, var(--c) 35%, transparent);
@@ -467,6 +478,10 @@ textarea.field__input { resize: vertical; min-height: 5.5rem; }
 }
 
 /* ---------- 9. Motion ---------- */
+@keyframes bar-fill {
+  from { width: 0; }
+}
+
 @keyframes pop {
   0%   { transform: scale(1); }
   50%  { transform: scale(1.03); }

@@ -6,13 +6,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 
-from . import services
+from . import services, utils
 from .forms import PollForm
-from .models import CATEGORY_COLOR, CATEGORY_EMOJI, Category, Poll
+from .models import CATEGORY_COLOR, CATEGORY_EMOJI, Category, Poll, Vote
 
 User = get_user_model()
 
@@ -40,9 +42,40 @@ def _url(path: str, **params) -> str:
     return f"{path}?{urlencode(params)}" if params else path
 
 
+def _attach_viewer_state(request, polls) -> None:
+    """Annotates polls with what *this viewer* may see and do.
+
+    Sets `is_owner`, `my_option_id`, `can_vote`, `show_results` and `results`.
+    `results` stays None unless the visibility rule allows it, so per-option
+    numbers never reach a template (or JSON) for people who may not see them.
+    """
+    polls = list(polls)
+    voter_key = utils.read_voter_key(request)
+    poll_ids = [poll.pk for poll in polls]
+    my_votes = {}
+    if voter_key and poll_ids:
+        my_votes = dict(Vote.objects.filter(voter_key=voter_key, poll_id__in=poll_ids).values_list("poll_id", "option_id"))
+
+    for poll in polls:
+        poll.is_owner = request.user.is_authenticated and poll.author_id == request.user.pk
+        poll.my_option_id = my_votes.get(poll.pk)
+        poll.can_vote = poll.is_open and not poll.is_owner
+        poll.show_results = services.results_visible(
+            poll=poll, is_owner=poll.is_owner, has_voted=poll.my_option_id is not None
+        )
+        poll.results = None
+
+    visible = [poll for poll in polls if poll.show_results]
+    counts = services.option_vote_counts([poll.pk for poll in visible]) if visible else {}
+    for poll in visible:
+        poll.results = services.build_results(poll, counts, poll.my_option_id)
+
+
 def _render_poll_list(request, queryset, *, template, context):
     """Paginates `queryset` and renders either the full page or just the list fragment."""
     page = Paginator(queryset, PAGE_SIZE).get_page(request.GET.get("sayfa"))
+    page.object_list = list(page.object_list)  # same instances the template will iterate
+    _attach_viewer_state(request, page.object_list)
     params = {key: request.GET.get(key) for key in ("sirala", "kategori")}
     context = {
         **context,
@@ -143,7 +176,50 @@ def create(request):
 
 def detail(request, pk):
     poll = get_object_or_404(_with_counts(Poll.objects.all()), pk=pk)
-    return render(request, "polls/detail.html", {"poll": poll})
+    _attach_viewer_state(request, [poll])
+    # "Oyumu değiştir": people who already voted may reopen the vote form.
+    editing = bool(request.GET.get("degistir")) and poll.can_vote and poll.my_option_id is not None
+    return render(request, "polls/detail.html", {"poll": poll, "editing": editing})
+
+
+@require_POST
+def vote(request, pk):
+    """Casts or changes a vote. Answers JSON for fetch() and redirects for plain form posts."""
+    poll = get_object_or_404(Poll, pk=pk)
+    wants_json = "application/json" in request.headers.get("Accept", "")
+    voter_key, new_cookie = utils.ensure_voter_key(request)
+    user = request.user if request.user.is_authenticated else None
+
+    try:
+        cast = services.cast_vote(
+            poll=poll, option_id=request.POST.get("option_id"), voter_key=voter_key, user=user
+        )
+    except services.VoteError as error:
+        if wants_json:
+            return JsonResponse({"ok": False, "error": str(error)}, status=error.status_code)
+        messages.error(request, str(error))
+        return redirect("polls:detail", pk=poll.pk)
+
+    if wants_json:
+        data = services.get_results(poll, my_option_id=cast.option_id)
+        response = JsonResponse(
+            {
+                "ok": True,
+                "total": data["total"],
+                "my_option_id": cast.option_id,
+                "results": [
+                    {"id": o["id"], "label": o["label"], "votes": o["votes"], "percent": o["percent"]}
+                    for o in data["options"]
+                ],
+            }
+        )
+    else:
+        messages.success(request, "Oyun kaydedildi ✅")
+        response = redirect("polls:detail", pk=poll.pk)
+
+    if new_cookie:
+        utils.set_voter_cookie(response, request, new_cookie)
+    return response
 
 
 def profile(request, username):

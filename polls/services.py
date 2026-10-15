@@ -3,11 +3,13 @@
 from datetime import timedelta
 
 from django.db import transaction
+from django.db.models import Count
 from django.utils import timezone
 
 from accounts.models import User
 
-from .models import MAX_OPTIONS, MIN_OPTIONS, Category, Option, Poll
+from . import utils
+from .models import MAX_OPTIONS, MIN_OPTIONS, Category, Option, Poll, Vote
 
 QUESTION_MIN, QUESTION_MAX = 10, 200
 DESCRIPTION_MAX = 500
@@ -39,6 +41,24 @@ class InvalidPollError(PollError):
 
 class DailyLimitError(PollError):
     pass
+
+
+class VoteError(PollError):
+    """Base class for voting rule violations; `status_code` is the HTTP status the endpoint uses."""
+
+    status_code = 400
+
+
+class PollClosedError(VoteError):
+    status_code = 409
+
+
+class OwnVoteError(VoteError):
+    status_code = 403
+
+
+class InvalidOptionError(VoteError):
+    status_code = 400
 
 
 def normalize_options(raw_options) -> list[str]:
@@ -107,3 +127,73 @@ def create_poll(
             [Option(poll=poll, label=label, position=index) for index, label in enumerate(options)]
         )
     return poll
+
+
+# --- Voting -----------------------------------------------------------------
+
+
+def cast_vote(*, poll: Poll, option_id, voter_key: str, user: User | None = None) -> Vote:
+    """Records the voter's vote, or moves their existing vote to another option.
+
+    Rules: poll must be open, the author cannot vote, and the option must belong to the poll.
+    """
+    with transaction.atomic():
+        # Lock the poll row so a vote cannot slip in while the poll is being closed.
+        poll = Poll.objects.select_for_update().get(pk=poll.pk)
+        if not poll.is_open:
+            raise PollClosedError("Bu anket sona ermiş.")
+        if user is not None and poll.author_id == user.pk:
+            raise OwnVoteError("Kendi anketine oy veremezsin.")
+        try:
+            option = Option.objects.get(pk=int(option_id), poll=poll)
+        except (TypeError, ValueError, Option.DoesNotExist):
+            raise InvalidOptionError("Geçersiz seçenek.") from None
+
+        vote, _ = Vote.objects.update_or_create(
+            poll=poll, voter_key=voter_key, defaults={"option": option, "user": user}
+        )
+    return vote
+
+
+def results_visible(*, poll: Poll, is_owner: bool, has_voted: bool) -> bool:
+    """Spec 4.2: results are shown to people who voted, to the owner, and once the poll is over."""
+    return (not poll.is_open) or is_owner or has_voted
+
+
+def can_see_results(poll: Poll, *, user, voter_key: str | None) -> bool:
+    is_owner = bool(user is not None and user.is_authenticated and poll.author_id == user.pk)
+    has_voted = bool(voter_key) and Vote.objects.filter(poll=poll, voter_key=voter_key).exists()
+    return results_visible(poll=poll, is_owner=is_owner, has_voted=has_voted)
+
+
+def option_vote_counts(poll_ids) -> dict[int, int]:
+    """{option_id: vote count} for the given polls (one query)."""
+    rows = Vote.objects.filter(poll_id__in=poll_ids).values("option_id").annotate(count=Count("id"))
+    return {row["option_id"]: row["count"] for row in rows}
+
+
+def build_results(poll: Poll, counts: dict[int, int], my_option_id: int | None = None) -> dict:
+    """Per-option results for one poll from pre-fetched counts. Only call this when results are visible."""
+    options = list(poll.options.all())
+    votes = [counts.get(option.pk, 0) for option in options]
+    shares = utils.percentages(votes)
+    top = max(votes, default=0)
+    return {
+        "total": sum(votes),
+        "options": [
+            {
+                "id": option.pk,
+                "label": option.label,
+                "color": option.color,
+                "votes": count,
+                "percent": percent,
+                "is_mine": option.pk == my_option_id,
+                "is_leading": top > 0 and count == top,
+            }
+            for option, count, percent in zip(options, votes, shares)
+        ],
+    }
+
+
+def get_results(poll: Poll, *, my_option_id: int | None = None) -> dict:
+    return build_results(poll, option_vote_counts([poll.pk]), my_option_id)
