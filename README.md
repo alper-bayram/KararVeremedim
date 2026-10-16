@@ -16,6 +16,8 @@ KararVeremedim is a small web app where people post polls about decisions they a
 
 > This is a **prototype / experiment.** It was written to be simple, readable and light on dependencies, and it is not meant for production use. Known limitations are listed below.
 
+**Status:** Complete for its intended scope (all phases of the spec are done), deployed on Vercel, and covered by 213 automated tests.
+
 ### Features
 
 - **Accounts:** Sign up with e-mail, username and password. Sign in with your e-mail **or** your username. E-mail addresses are never shown on any page.
@@ -141,6 +143,8 @@ Kararsız mı kaldın? Anket aç, herkese danış.
 KararVeremedim, kullanıcıların *"Bu akşam sinemaya mı gitsem, restorana mı?"* gibi kararsız kaldıkları konularda 2-5 seçenekli anketler açtığı ve herkesin oy verebildiği küçük bir web uygulamasıdır. Üye olmadan da oy verilebilir.
 
 > Bu bir **deneme (prototip) projesidir.** Basit, okunabilir ve az bağımlılıklı olacak şekilde yazıldı; üretim kullanımı için tasarlanmadı. Bilinen sınırlamalar aşağıda.
+
+**Durum:** Hedeflenen kapsam tamamlandı (spesifikasyondaki tüm fazlar bitti), Vercel'de yayında ve 213 otomatik testle kapsanıyor.
 
 ### Özellikler
 
